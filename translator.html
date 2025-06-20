@@ -381,6 +381,36 @@
             'tr': { name: 'Turkish' }
         };
 
+        // Euronews URL mapping
+        const euronewsUrls = {
+            'en': 'euronews.com',
+            'fr': 'euronews.fr',
+            'de': 'euronews.de',
+            'it': 'euronews.it',
+            'es': 'euronews.es',
+            'pt': 'euronews.pt',
+            'ru': 'ru.euronews.com',
+            'hu': 'euronews.hu',
+            'el': 'gr.euronews.com',
+            'pl': 'pl.euronews.com',
+            'ar': 'arabic.euronews.com',
+            'fa': 'parsi.euronews.com',
+            'tr': 'tr.euronews.com'
+        };
+
+        // Clean text by removing EN line and adapting URLs
+        function processTextForTranslation(text, targetLang) {
+            // Remove standalone "EN" line at the beginning
+            let processedText = text.replace(/^EN\s*\n?/m, '').trim();
+            
+            // Replace euronews.com URLs with language-specific versions
+            if (euronewsUrls[targetLang]) {
+                processedText = processedText.replace(/euronews\.com/g, euronewsUrls[targetLang]);
+            }
+            
+            return processedText;
+        }
+
         // Initialize Office
         Office.onReady((info) => {
             if (info.host === Office.HostType.Word) {
@@ -480,7 +510,10 @@
                         updateProgress((i / selectedLanguages.length) * 100, `Translating to ${langName}...`);
                         
                         try {
-                            const translatedText = await translateText(originalText, langCode);
+                            // Process text: remove EN line and adapt URLs
+                            const processedText = processTextForTranslation(originalText, langCode);
+                            
+                            const translatedText = await translateText(processedText, langCode);
                             await insertTranslation(context, translatedText, langName, langCode);
                         } catch (error) {
                             console.error(`Error translating to ${langName}:`, error);
@@ -571,7 +604,14 @@
                         if (result && result[0] && result[0].translations && result[0].translations[0]) {
                             console.log('✅ Azure Translator success');
                             showApiStatus('✅ Azure Translator working perfectly!', 'success');
-                            return result[0].translations[0].text;
+                            
+                            // Apply Euronews URL adaptation to Azure translated text as well
+                            let translatedText = result[0].translations[0].text;
+                            if (euronewsUrls[targetLang]) {
+                                translatedText = translatedText.replace(/euronews\.com/g, euronewsUrls[targetLang]);
+                            }
+                            
+                            return translatedText;
                         }
                     } else {
                         console.warn('⚠️ Azure Translator error:', response.status, response.statusText);
@@ -605,7 +645,14 @@
                     if (!userApiKey) {
                         showApiStatus('ℹ️ Using free translation service. Add Azure key for better quality.', 'info');
                     }
-                    return data.responseData.translatedText;
+                    
+                    // Apply Euronews URL adaptation to translated text as well
+                    let translatedText = data.responseData.translatedText;
+                    if (euronewsUrls[targetLang]) {
+                        translatedText = translatedText.replace(/euronews\.com/g, euronewsUrls[targetLang]);
+                    }
+                    
+                    return translatedText;
                 } else {
                     throw new Error('MyMemory service unavailable');
                 }
