@@ -516,7 +516,7 @@
         }
 
         // Export translated content as separate TXT files
-        async function exportTextFiles() {
+        function exportTextFiles() {
             if (Object.keys(translatedContent).length === 0) {
                 showStatus('Please translate text first before exporting files.', 'error');
                 return;
@@ -528,60 +528,81 @@
             
             try {
                 let exportCount = 0;
+                const totalFiles = Object.keys(translatedContent).length;
                 
+                // Export all files with small delays
+                let delay = 0;
                 for (const [langCode, content] of Object.entries(translatedContent)) {
-                    try {
-                        await downloadTextFile(content.text, content.language);
-                        exportCount++;
-                        
-                        // Small delay between downloads to avoid browser blocking
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    } catch (error) {
-                        console.error(`Error exporting ${content.language}:`, error);
-                    }
-                }
-                
-                if (exportCount > 0) {
-                    showStatus(`Successfully exported ${exportCount} TXT files!`, 'success');
-                } else {
-                    showStatus('Failed to export files.', 'error');
+                    setTimeout(() => {
+                        downloadTextFile(content.text, content.language)
+                            .then(() => {
+                                exportCount++;
+                                console.log(`Exported ${exportCount}/${totalFiles} files`);
+                                
+                                // Check if all files are exported
+                                if (exportCount === totalFiles) {
+                                    showStatus(`Successfully exported ${exportCount} TXT files!`, 'success');
+                                    button.disabled = false;
+                                    button.textContent = '📁 Export TXT Files';
+                                }
+                            })
+                            .catch((error) => {
+                                console.error(`Error exporting ${content.language}:`, error);
+                                exportCount++;
+                                
+                                // Check if all files are processed (including errors)
+                                if (exportCount === totalFiles) {
+                                    showStatus(`Exported files with some errors. Check console.`, 'error');
+                                    button.disabled = false;
+                                    button.textContent = '📁 Export TXT Files';
+                                }
+                            });
+                    }, delay);
+                    delay += 200; // 200ms delay between each file
                 }
                 
             } catch (error) {
                 console.error('Export error:', error);
                 showStatus('Error during file export.', 'error');
-            } finally {
                 button.disabled = false;
                 button.textContent = '📁 Export TXT Files';
             }
         }
 
         // Download a single text file
-        async function downloadTextFile(text, languageName) {
-            // Create filename: language name in lowercase
-            const filename = `${languageName.toLowerCase()}.txt`;
-            
-            // Create blob with UTF-8 encoding
-            const blob = new Blob([text], { 
-                type: 'text/plain;charset=utf-8' 
+        function downloadTextFile(text, languageName) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // Create filename: language name in lowercase
+                    const filename = `${languageName.toLowerCase()}.txt`;
+                    
+                    // Create blob with UTF-8 encoding
+                    const blob = new Blob([text], { 
+                        type: 'text/plain;charset=utf-8' 
+                    });
+                    
+                    // Create download link
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.style.display = 'none';
+                    
+                    // Trigger download
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    // Clean up
+                    URL.revokeObjectURL(url);
+                    
+                    console.log(`✅ Exported: ${filename}`);
+                    resolve();
+                } catch (error) {
+                    console.error(`❌ Export failed for ${languageName}:`, error);
+                    reject(error);
+                }
             });
-            
-            // Create download link
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.style.display = 'none';
-            
-            // Trigger download
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            // Clean up
-            URL.revokeObjectURL(url);
-            
-            console.log(`✅ Exported: ${filename}`);
         }com/cognitiveservices/v1`, {
                     method: 'POST',
                     headers: {
@@ -615,7 +636,10 @@
         }
 
         async function startTranslation() {
+            console.log('🔵 Start Translation clicked');
+            
             const selectedLanguages = getSelectedLanguages();
+            console.log('🔵 Selected languages:', selectedLanguages);
             
             if (selectedLanguages.length === 0) {
                 showStatus('Please select at least one language.', 'error');
@@ -633,13 +657,17 @@
             translatedContent = {}; // Reset translated content
 
             try {
+                console.log('🔵 Starting Word.run...');
                 await Word.run(async (context) => {
+                    console.log('🔵 Inside Word.run context');
+                    
                     // Get document content
                     const body = context.document.body;
                     body.load("text,style");
                     await context.sync();
 
                     const originalText = body.text;
+                    console.log('🔵 Original text length:', originalText.length);
                     
                     if (!originalText.trim()) {
                         throw new Error('The document is empty.');
@@ -650,6 +678,7 @@
                         const langCode = selectedLanguages[i];
                         const langName = languages[langCode].name;
                         
+                        console.log(`🔵 Translating to ${langName}...`);
                         updateProgress((i / selectedLanguages.length) * 100, `Translating to ${langName}...`);
                         
                         try {
@@ -657,15 +686,19 @@
                             const processedText = processTextForTranslation(originalText, langCode);
                             
                             const translatedText = await translateText(processedText, langCode);
+                            console.log(`✅ Translation completed for ${langName}`);
+                            
                             await insertTranslation(context, translatedText, langName, langCode);
                             
-                            // Store translated content for export
-                            translatedContent[langCode] = {
-                                text: translatedText,
-                                language: langName
-                            };
+                            // Store translated content for export (only if translation successful)
+                            if (translatedText && !translatedText.includes('[Translation error')) {
+                                translatedContent[langCode] = {
+                                    text: translatedText,
+                                    language: langName
+                                };
+                            }
                         } catch (error) {
-                            console.error(`Error translating to ${langName}:`, error);
+                            console.error(`❌ Error translating to ${langName}:`, error);
                             await insertTranslation(context, `[Translation error for ${langName}]`, langName, langCode);
                         }
                     }
@@ -685,7 +718,7 @@
                 });
 
             } catch (error) {
-                console.error('Error:', error);
+                console.error('❌ Main error:', error);
                 showStatus(`Error: ${error.message}`, 'error');
                 showProgress(false);
             } finally {
