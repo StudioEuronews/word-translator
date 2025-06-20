@@ -115,7 +115,6 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-bottom: 15px;
         }
 
         .translate-btn:hover {
@@ -130,31 +129,7 @@
             box-shadow: none;
         }
 
-        .export-btn {
-            width: 100%;
-            background: linear-gradient(45deg, #FF6B6B, #FF5252);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 10px;
-        }
 
-        .export-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .export-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
 
         .progress-container {
             display: none;
@@ -284,22 +259,14 @@
                     </div>
                 </div>
 
-                <div class="option-group">
-                    <h3>Export audio</h3>
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="enableAudio">
-                        <label for="enableAudio">Activer l'export audio</label>
-                    </div>
-                </div>
+
             </div>
 
             <button class="translate-btn" onclick="startTranslation()">
                 🚀 Commencer la traduction
             </button>
 
-            <button class="export-btn" onclick="exportAudio()" disabled id="audioBtn">
-                🎵 Exporter les fichiers audio
-            </button>
+
 
             <div class="progress-container" id="progressContainer">
                 <div class="progress-bar">
@@ -323,20 +290,20 @@
             }
         });
 
-        // Langues avec leurs codes de traduction
+        // Langues avec leurs codes de traduction Microsoft
         const languages = {
-            'fr': { name: 'Français', voice: 'fr-FR' },
-            'de': { name: 'Allemand', voice: 'de-DE' },
-            'it': { name: 'Italien', voice: 'it-IT' },
-            'es': { name: 'Espagnol', voice: 'es-ES' },
-            'pt': { name: 'Portugais', voice: 'pt-PT' },
-            'ru': { name: 'Russe', voice: 'ru-RU' },
-            'el': { name: 'Grec', voice: 'el-GR' },
-            'hu': { name: 'Hongrois', voice: 'hu-HU' },
-            'pl': { name: 'Polonais', voice: 'pl-PL' },
-            'fa': { name: 'Farsi', voice: 'fa-IR' },
-            'ar': { name: 'Arabe', voice: 'ar-SA' },
-            'tr': { name: 'Turc', voice: 'tr-TR' }
+            'fr': { name: 'Français' },
+            'de': { name: 'Allemand' },
+            'it': { name: 'Italien' },
+            'es': { name: 'Espagnol' },
+            'pt': { name: 'Portugais' },
+            'ru': { name: 'Russe' },
+            'el': { name: 'Grec' },
+            'hu': { name: 'Hongrois' },
+            'pl': { name: 'Polonais' },
+            'fa': { name: 'Farsi' },
+            'ar': { name: 'Arabe' },
+            'tr': { name: 'Turc' }
         };
 
         async function startTranslation() {
@@ -446,11 +413,18 @@
         }
 
         async function translateText(text, targetLang) {
-            // Simulation de traduction (en réalité, vous devriez utiliser une API de traduction)
-            // Ici nous utilisons une approche simple avec des services gratuits
+            try {
+                // Utilisation du traducteur Microsoft Translator via Office.js
+                const result = await Office.context.document.translateDocument(targetLang, text);
+                if (result && result.value) {
+                    return result.value;
+                }
+            } catch (error) {
+                console.log('Traducteur Microsoft non disponible, utilisation du service de fallback');
+            }
             
             try {
-                // Utilisation d'un service de traduction public
+                // Fallback: service de traduction public
                 const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`);
                 const data = await response.json();
                 
@@ -460,59 +434,12 @@
                     throw new Error('Service de traduction indisponible');
                 }
             } catch (error) {
-                // Fallback: texte d'exemple
+                // Dernier fallback: texte simulé
                 return `[Traduction ${languages[targetLang].name}] ${text}`;
             }
         }
 
-        async function exportAudio() {
-            if (!isTranslationComplete || Object.keys(translatedContent).length === 0) {
-                showStatus('Veuillez d\'abord effectuer une traduction.', 'error');
-                return;
-            }
 
-            const button = document.getElementById('audioBtn');
-            button.disabled = true;
-            button.textContent = '🎵 Génération audio...';
-
-            try {
-                for (const [langCode, text] of Object.entries(translatedContent)) {
-                    await generateAudioFile(text, langCode, languages[langCode].name);
-                }
-                
-                showStatus('Fichiers audio générés avec succès !', 'success');
-            } catch (error) {
-                console.error('Erreur lors de la génération audio:', error);
-                showStatus('Erreur lors de la génération des fichiers audio.', 'error');
-            } finally {
-                button.disabled = false;
-                button.textContent = '🎵 Exporter les fichiers audio';
-            }
-        }
-
-        async function generateAudioFile(text, langCode, langName) {
-            // Utilisation de l'API Web Speech pour la synthèse vocale
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = languages[langCode].voice;
-                utterance.rate = 0.8;
-                utterance.pitch = 1;
-
-                // Créer un lien de téléchargement simulé
-                const blob = new Blob([`Audio pour ${langName}:\n${text}`], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `traduction_${langName.toLowerCase()}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                // Jouer l'audio
-                speechSynthesis.speak(utterance);
-            }
-        }
 
         function getSelectedLanguages() {
             const checkboxes = document.querySelectorAll('.language-option input[type="checkbox"]:checked');
@@ -540,15 +467,7 @@
             }, 5000);
         }
 
-        // Gestionnaire pour l'option audio
-        document.getElementById('enableAudio').addEventListener('change', function() {
-            const audioBtn = document.getElementById('audioBtn');
-            if (this.checked && isTranslationComplete) {
-                audioBtn.disabled = false;
-            } else {
-                audioBtn.disabled = true;
-            }
-        });
+
     </script>
 </body>
 </html></h3>
