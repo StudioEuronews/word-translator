@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Traducteur Multilingue Word</title>
+    <title>Multilingual Translator Word</title>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <style>
         body {
@@ -128,8 +128,6 @@
             transform: none;
             box-shadow: none;
         }
-
-
 
         .progress-container {
             display: none;
@@ -258,15 +256,11 @@
                         <label for="newPage">New page per language</label>
                     </div>
                 </div>
-
-
             </div>
 
             <button class="translate-btn" onclick="startTranslation()">
                 🚀 Start Translation
             </button>
-
-
 
             <div class="progress-container" id="progressContainer">
                 <div class="progress-bar">
@@ -280,16 +274,6 @@
     </div>
 
     <script>
-        let translatedContent = {};
-        let isTranslationComplete = false;
-
-        // Initialisation d'Office
-        Office.onReady((info) => {
-            if (info.host === Office.HostType.Word) {
-                console.log('Add-in chargé dans Word');
-            }
-        });
-
         // Languages with ISO 639-1 codes
         const languages = {
             'fr': { name: 'French' },
@@ -306,6 +290,13 @@
             'tr': { name: 'Turkish' }
         };
 
+        // Initialize Office
+        Office.onReady((info) => {
+            if (info.host === Office.HostType.Word) {
+                console.log('Add-in loaded in Word');
+            }
+        });
+
         async function startTranslation() {
             const selectedLanguages = getSelectedLanguages();
             
@@ -319,11 +310,10 @@
             button.textContent = '⏳ Translation in progress...';
 
             showProgress(true);
-            translatedContent = {};
 
             try {
                 await Word.run(async (context) => {
-                    // Récupérer le contenu du document
+                    // Get document content
                     const body = context.document.body;
                     body.load("text,style");
                     await context.sync();
@@ -343,29 +333,19 @@
                         
                         try {
                             const translatedText = await translateText(originalText, langCode);
-                            translatedContent[langCode] = translatedText;
-                            
-                            // Insérer la traduction dans le document
                             await insertTranslation(context, translatedText, langName, langCode);
-                            
                         } catch (error) {
                             console.error(`Error translating to ${langName}:`, error);
-                            translatedContent[langCode] = `[Translation error for ${langName}]`;
+                            await insertTranslation(context, `[Translation error for ${langName}]`, langName, langCode);
                         }
                     }
 
                     await context.sync();
-                    updateProgress(100, 'Traduction terminée !');
+                    updateProgress(100, 'Translation completed!');
                     
                     setTimeout(() => {
                         showProgress(false);
-                        showStatus('Traduction réussie ! Le document a été mis à jour.', 'success');
-                        isTranslationComplete = true;
-                        
-                        // Activer le bouton audio si l'option est cochée
-                        if (document.getElementById('enableAudio').checked) {
-                            document.getElementById('audioBtn').disabled = false;
-                        }
+                        showStatus('Translation successful! The document has been updated.', 'success');
                     }, 1000);
                 });
 
@@ -386,7 +366,7 @@
 
             // Insert page break if requested
             if (newPage) {
-                const range = context.document.body.insertBreak(Word.BreakType.page, Word.InsertLocation.end);
+                context.document.body.insertBreak(Word.BreakType.page, Word.InsertLocation.end);
             }
 
             // Insert language title
@@ -404,7 +384,6 @@
 
             // Apply formatting if requested
             if (preserveFormat) {
-                // Copy some styles from original document
                 textRange.font.size = 12;
                 textRange.paragraphFormat.spaceAfter = 6;
             }
@@ -414,12 +393,12 @@
 
         async function translateText(text, targetLang) {
             try {
-                // Utilisation du traducteur Microsoft Translator avec codes ISO 3166
+                // Try Microsoft Translator first
                 const response = await fetch(`https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=${targetLang}`, {
                     method: 'POST',
                     headers: {
-                        'Ocp-Apim-Subscription-Key': 'YOUR_API_KEY_HERE', // Remplacez par votre clé
-                        'Ocp-Apim-Subscription-Region': 'YOUR_REGION_HERE', // Ex: westeurope
+                        'Ocp-Apim-Subscription-Key': 'YOUR_API_KEY_HERE',
+                        'Ocp-Apim-Subscription-Region': 'YOUR_REGION_HERE',
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify([{text: text}])
@@ -436,7 +415,7 @@
             }
             
             try {
-                // Fallback: service de traduction public avec codes ISO 639-1
+                // Fallback: MyMemory service
                 const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`);
                 const data = await response.json();
                 
@@ -446,12 +425,10 @@
                     throw new Error('Translation service unavailable');
                 }
             } catch (error) {
-                // Last fallback: simulated text with full language name
+                // Last fallback: simulated text
                 return `[${languages[targetLang].name} Translation] ${text}`;
             }
         }
-
-
 
         function getSelectedLanguages() {
             const checkboxes = document.querySelectorAll('.language-option input[type="checkbox"]:checked');
@@ -478,295 +455,6 @@
                 status.style.display = 'none';
             }, 5000);
         }
-
-
     </script>
 </body>
-</html></h3>
-                <div class="checkbox-option">
-                  <input type="checkbox" id="enableAudio"/>
-                  <label for="enableAudio">Activer l'export audio</label>
-                </div>
-              </div>
-            </div>
-
-            <button class="translate-btn" onclick="startTranslation()">
-              🚀 Commencer la traduction
-            </button>
-
-            <button class="export-btn" onclick="exportAudio()" disabled="disabled" id="audioBtn">
-              🎵 Exporter les fichiers audio
-            </button>
-
-            <div class="progress-container" id="progressContainer">
-              <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-              </div>
-              <div class="progress-text" id="progressText"></div>
-            </div>
-
-            <div class="status" id="status"></div>
-          </div>
-        </div>
-
-        <script type="text/javascript">
-          <![CDATA[
-          let translatedContent = {};
-          let isTranslationComplete = false;
-
-          // Initialisation d'Office
-          Office.onReady(function(info) {
-            if (info.host === Office.HostType.Word) {
-              console.log('Add-in chargé dans Word');
-            }
-          });
-
-          // Langues avec leurs codes de traduction
-          const languages = {
-            'fr': { name: 'Français', voice: 'fr-FR' },
-            'de': { name: 'Allemand', voice: 'de-DE' },
-            'it': { name: 'Italien', voice: 'it-IT' },
-            'es': { name: 'Espagnol', voice: 'es-ES' },
-            'pt': { name: 'Portugais', voice: 'pt-PT' },
-            'ru': { name: 'Russe', voice: 'ru-RU' },
-            'el': { name: 'Grec', voice: 'el-GR' },
-            'hu': { name: 'Hongrois', voice: 'hu-HU' },
-            'pl': { name: 'Polonais', voice: 'pl-PL' },
-            'fa': { name: 'Farsi', voice: 'fa-IR' },
-            'ar': { name: 'Arabe', voice: 'ar-SA' },
-            'tr': { name: 'Turc', voice: 'tr-TR' }
-          };
-
-          function startTranslation() {
-            const selectedLanguages = getSelectedLanguages();
-            
-            if (selectedLanguages.length === 0) {
-              showStatus('Veuillez sélectionner au moins une langue.', 'error');
-              return;
-            }
-
-            const button = document.querySelector('.translate-btn');
-            button.disabled = true;
-            button.textContent = '⏳ Traduction en cours...';
-
-            showProgress(true);
-            translatedContent = {};
-
-            Word.run(function (context) {
-              // Récupérer le contenu du document
-              const body = context.document.body;
-              body.load("text,style");
-              
-              return context.sync().then(function () {
-                const originalText = body.text;
-                
-                if (!originalText.trim()) {
-                  throw new Error('Le document est vide.');
-                }
-
-                // Traduire pour chaque langue sélectionnée
-                let promises = [];
-                for (let i = 0; i < selectedLanguages.length; i++) {
-                  const langCode = selectedLanguages[i];
-                  const langName = languages[langCode].name;
-                  
-                  updateProgress((i / selectedLanguages.length) * 100, 'Traduction en ' + langName + '...');
-                  
-                  const promise = translateText(originalText, langCode).then(function(translatedText) {
-                    translatedContent[langCode] = translatedText;
-                    return insertTranslation(context, translatedText, langName, langCode);
-                  }).catch(function(error) {
-                    console.error('Erreur lors de la traduction en ' + langName + ':', error);
-                    translatedContent[langCode] = '[Erreur de traduction pour ' + langName + ']';
-                  });
-                  
-                  promises.push(promise);
-                }
-
-                return Promise.all(promises).then(function() {
-                  return context.sync();
-                }).then(function() {
-                  updateProgress(100, 'Traduction terminée !');
-                  
-                  setTimeout(function() {
-                    showProgress(false);
-                    showStatus('Traduction réussie ! Le document a été mis à jour.', 'success');
-                    isTranslationComplete = true;
-                    
-                    // Activer le bouton audio si l'option est cochée
-                    if (document.getElementById('enableAudio').checked) {
-                      document.getElementById('audioBtn').disabled = false;
-                    }
-                  }, 1000);
-                });
-              });
-            }).catch(function (error) {
-              console.error('Erreur:', error);
-              showStatus('Erreur: ' + error.message, 'error');
-              showProgress(false);
-            }).finally(function() {
-              button.disabled = false;
-              button.textContent = '🚀 Commencer la traduction';
-            });
-          }
-
-          function insertTranslation(context, translatedText, langName, langCode) {
-            const preserveFormat = document.getElementById('preserveFormat').checked;
-            const redText = document.getElementById('redText').checked;
-            const newPage = document.getElementById('newPage').checked;
-
-            return Word.run(function (context) {
-              // Insérer un saut de page si demandé
-              if (newPage) {
-                context.document.body.insertBreak(Word.BreakType.page, Word.InsertLocation.end);
-              }
-
-              // Insérer le titre de la langue
-              const titleRange = context.document.body.insertText('\n\n=== ' + langName.toUpperCase() + ' ===\n\n', Word.InsertLocation.end);
-              titleRange.font.bold = true;
-              titleRange.font.size = 16;
-              titleRange.font.color = '#2196F3';
-
-              // Insérer le texte traduit
-              const textRange = context.document.body.insertText(translatedText, Word.InsertLocation.end);
-              
-              if (redText) {
-                textRange.font.color = '#FF0000';
-              }
-
-              // Appliquer le formatage si demandé
-              if (preserveFormat) {
-                textRange.font.size = 12;
-                textRange.paragraphFormat.spaceAfter = 6;
-              }
-
-              return context.sync();
-            });
-          }
-
-          function translateText(text, targetLang) {
-            // Simulation de traduction utilisant une API publique
-            return new Promise(function(resolve, reject) {
-              try {
-                const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=en|' + targetLang;
-                
-                const xhr = new XMLHttpRequest();
-                xhr.open('GET', url);
-                xhr.onload = function() {
-                  if (xhr.status === 200) {
-                    const data = JSON.parse(xhr.responseText);
-                    if (data.responseData && data.responseData.translatedText) {
-                      resolve(data.responseData.translatedText);
-                    } else {
-                      reject(new Error('Service de traduction indisponible'));
-                    }
-                  } else {
-                    reject(new Error('Erreur de réseau'));
-                  }
-                };
-                xhr.onerror = function() {
-                  reject(new Error('Erreur de connexion'));
-                };
-                xhr.send();
-              } catch (error) {
-                // Fallback: texte d'exemple
-                resolve('[Traduction ' + languages[targetLang].name + '] ' + text);
-              }
-            });
-          }
-
-          function exportAudio() {
-            if (!isTranslationComplete || Object.keys(translatedContent).length === 0) {
-              showStatus('Veuillez d\'abord effectuer une traduction.', 'error');
-              return;
-            }
-
-            const button = document.getElementById('audioBtn');
-            button.disabled = true;
-            button.textContent = '🎵 Génération audio...';
-
-            try {
-              for (const langCode in translatedContent) {
-                const text = translatedContent[langCode];
-                generateAudioFile(text, langCode, languages[langCode].name);
-              }
-              
-              showStatus('Fichiers audio générés avec succès !', 'success');
-            } catch (error) {
-              console.error('Erreur lors de la génération audio:', error);
-              showStatus('Erreur lors de la génération des fichiers audio.', 'error');
-            } finally {
-              button.disabled = false;
-              button.textContent = '🎵 Exporter les fichiers audio';
-            }
-          }
-
-          function generateAudioFile(text, langCode, langName) {
-            // Utilisation de l'API Web Speech pour la synthèse vocale
-            if ('speechSynthesis' in window) {
-              const utterance = new SpeechSynthesisUtterance(text);
-              utterance.lang = languages[langCode].voice;
-              utterance.rate = 0.8;
-              utterance.pitch = 1;
-
-              // Créer un lien de téléchargement simulé
-              const blob = new Blob(['Audio pour ' + langName + ':\n' + text], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'traduction_' + langName.toLowerCase() + '.txt';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-
-              // Jouer l'audio
-              speechSynthesis.speak(utterance);
-            }
-          }
-
-          function getSelectedLanguages() {
-            const checkboxes = document.querySelectorAll('.language-option input[type="checkbox"]:checked');
-            const selected = [];
-            for (let i = 0; i < checkboxes.length; i++) {
-              selected.push(checkboxes[i].value);
-            }
-            return selected;
-          }
-
-          function showProgress(show) {
-            const container = document.getElementById('progressContainer');
-            container.style.display = show ? 'block' : 'none';
-          }
-
-          function updateProgress(percent, text) {
-            document.getElementById('progressFill').style.width = percent + '%';
-            document.getElementById('progressText').textContent = text;
-          }
-
-          function showStatus(message, type) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = 'status ' + type;
-            status.style.display = 'block';
-            
-            setTimeout(function() {
-              status.style.display = 'none';
-            }, 5000);
-          }
-
-          // Gestionnaire pour l'option audio
-          document.getElementById('enableAudio').addEventListener('change', function() {
-            const audioBtn = document.getElementById('audioBtn');
-            if (this.checked && isTranslationComplete) {
-              audioBtn.disabled = false;
-            } else {
-              audioBtn.disabled = true;
-            }
-          });
-          ]]>
-        </script>
-      </body>
-    </html>
-  </xsl:template>
-</xsl:stylesheet>
+</html>
