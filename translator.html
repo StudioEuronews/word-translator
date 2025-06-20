@@ -395,6 +395,9 @@
     </div>
 
     <script>
+        // Global variables
+        let translatedContent = {};
+
         // Languages with ISO 639-1 codes
         const languages = {
             'fr': { name: 'French' },
@@ -428,6 +431,20 @@
             'tr': 'tr.euronews.com'
         };
 
+        // Initialize Office
+        Office.onReady((info) => {
+            if (info.host === Office.HostType.Word) {
+                console.log('Add-in loaded in Word');
+                loadSavedApiKey();
+                
+                // Attach event listeners
+                document.getElementById('translateBtn').addEventListener('click', startTranslation);
+                document.getElementById('exportBtn').addEventListener('click', exportTextFiles);
+                
+                console.log('Event listeners attached');
+            }
+        });
+
         // Clean text by removing EN line and adapting URLs
         function processTextForTranslation(text, targetLang) {
             // Remove standalone "EN" line at the beginning
@@ -450,21 +467,6 @@
             }
             return text;
         }
-
-        // Initialize Office
-        Office.onReady((info) => {
-            if (info.host === Office.HostType.Word) {
-                console.log('Add-in loaded in Word');
-                loadSavedApiKey();
-                
-                // Attach event listeners
-                document.getElementById('translateBtn').addEventListener('click', startTranslation);
-                document.getElementById('exportBtn').addEventListener('click', exportTextFiles);
-            }
-        });
-
-        // Global variable to store translated content for export
-        let translatedContent = {};
 
         // Load saved API key from localStorage
         function loadSavedApiKey() {
@@ -519,126 +521,6 @@
             }, 5000);
         }
 
-        // Export translated content as separate TXT files
-        function exportTextFiles() {
-            if (Object.keys(translatedContent).length === 0) {
-                showStatus('Please translate text first before exporting files.', 'error');
-                return;
-            }
-            
-            const button = document.getElementById('exportBtn');
-            button.disabled = true;
-            button.textContent = '📁 Exporting files...';
-            
-            try {
-                let exportCount = 0;
-                const totalFiles = Object.keys(translatedContent).length;
-                
-                // Export all files with small delays
-                let delay = 0;
-                for (const [langCode, content] of Object.entries(translatedContent)) {
-                    setTimeout(() => {
-                        downloadTextFile(content.text, content.language)
-                            .then(() => {
-                                exportCount++;
-                                console.log(`Exported ${exportCount}/${totalFiles} files`);
-                                
-                                // Check if all files are exported
-                                if (exportCount === totalFiles) {
-                                    showStatus(`Successfully exported ${exportCount} TXT files!`, 'success');
-                                    button.disabled = false;
-                                    button.textContent = '📁 Export TXT Files';
-                                }
-                            })
-                            .catch((error) => {
-                                console.error(`Error exporting ${content.language}:`, error);
-                                exportCount++;
-                                
-                                // Check if all files are processed (including errors)
-                                if (exportCount === totalFiles) {
-                                    showStatus(`Exported files with some errors. Check console.`, 'error');
-                                    button.disabled = false;
-                                    button.textContent = '📁 Export TXT Files';
-                                }
-                            });
-                    }, delay);
-                    delay += 200; // 200ms delay between each file
-                }
-                
-            } catch (error) {
-                console.error('Export error:', error);
-                showStatus('Error during file export.', 'error');
-                button.disabled = false;
-                button.textContent = '📁 Export TXT Files';
-            }
-        }
-
-        // Download a single text file
-        function downloadTextFile(text, languageName) {
-            return new Promise((resolve, reject) => {
-                try {
-                    // Create filename: language name in lowercase
-                    const filename = `${languageName.toLowerCase()}.txt`;
-                    
-                    // Create blob with UTF-8 encoding
-                    const blob = new Blob([text], { 
-                        type: 'text/plain;charset=utf-8' 
-                    });
-                    
-                    // Create download link
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    a.style.display = 'none';
-                    
-                    // Trigger download
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                    // Clean up
-                    URL.revokeObjectURL(url);
-                    
-                    console.log(`✅ Exported: ${filename}`);
-                    resolve();
-                } catch (error) {
-                    console.error(`❌ Export failed for ${languageName}:`, error);
-                    reject(error);
-                }
-            });
-        }com/cognitiveservices/v1`, {
-                    method: 'POST',
-                    headers: {
-                        'Ocp-Apim-Subscription-Key': apiKey,
-                        'Content-Type': 'application/ssml+xml',
-                        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
-                    },
-                    body: ssml
-                });
-                
-                if (response.ok) {
-                    const audioBlob = await response.blob();
-                    
-                    // Create download link
-                    const url = URL.createObjectURL(audioBlob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${langName.toLowerCase()}_audio.mp3`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    console.log(`✅ Audio generated for ${langName}`);
-                } else {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-            } catch (error) {
-                throw new Error(`Audio generation failed for ${langName}: ${error.message}`);
-            }
-        }
-
         async function startTranslation() {
             console.log('🔵 Start Translation clicked');
             
@@ -653,7 +535,7 @@
             // Save API key settings
             saveApiKeyIfNeeded();
 
-            const button = document.querySelector('.translate-btn');
+            const button = document.getElementById('translateBtn');
             button.disabled = true;
             button.textContent = '⏳ Translation in progress...';
 
@@ -702,6 +584,14 @@
                                 };
                             }
                         } catch (error) {
+                    console.error(`❌ Export failed for ${languageName}:`, error);
+                    reject(error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
                             console.error(`❌ Error translating to ${langName}:`, error);
                             await insertTranslation(context, `[Translation error for ${langName}]`, langName, langCode);
                         }
@@ -873,6 +763,90 @@
                 status.style.display = 'none';
             }, 5000);
         }
-    </script>
-</body>
-</html>
+
+        // Export translated content as separate TXT files
+        function exportTextFiles() {
+            console.log('🔵 Export TXT Files clicked');
+            
+            if (Object.keys(translatedContent).length === 0) {
+                showStatus('Please translate text first before exporting files.', 'error');
+                return;
+            }
+            
+            const button = document.getElementById('exportBtn');
+            button.disabled = true;
+            button.textContent = '📁 Exporting files...';
+            
+            try {
+                let exportCount = 0;
+                const totalFiles = Object.keys(translatedContent).length;
+                
+                // Export all files with small delays
+                let delay = 0;
+                for (const [langCode, content] of Object.entries(translatedContent)) {
+                    setTimeout(() => {
+                        downloadTextFile(content.text, content.language)
+                            .then(() => {
+                                exportCount++;
+                                console.log(`Exported ${exportCount}/${totalFiles} files`);
+                                
+                                // Check if all files are exported
+                                if (exportCount === totalFiles) {
+                                    showStatus(`Successfully exported ${exportCount} TXT files!`, 'success');
+                                    button.disabled = false;
+                                    button.textContent = '📁 Export TXT Files';
+                                }
+                            })
+                            .catch((error) => {
+                                console.error(`Error exporting ${content.language}:`, error);
+                                exportCount++;
+                                
+                                // Check if all files are processed (including errors)
+                                if (exportCount === totalFiles) {
+                                    showStatus(`Exported files with some errors. Check console.`, 'error');
+                                    button.disabled = false;
+                                    button.textContent = '📁 Export TXT Files';
+                                }
+                            });
+                    }, delay);
+                    delay += 200; // 200ms delay between each file
+                }
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                showStatus('Error during file export.', 'error');
+                button.disabled = false;
+                button.textContent = '📁 Export TXT Files';
+            }
+        }
+
+        // Download a single text file
+        function downloadTextFile(text, languageName) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // Create filename: language name in lowercase
+                    const filename = `${languageName.toLowerCase()}.txt`;
+                    
+                    // Create blob with UTF-8 encoding
+                    const blob = new Blob([text], { 
+                        type: 'text/plain;charset=utf-8' 
+                    });
+                    
+                    // Create download link
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.style.display = 'none';
+                    
+                    // Trigger download
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    // Clean up
+                    URL.revokeObjectURL(url);
+                    
+                    console.log(`✅ Exported: ${filename}`);
+                    resolve();
+                } catch (error) {
