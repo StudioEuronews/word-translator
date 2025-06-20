@@ -403,12 +403,22 @@
             // Remove standalone "EN" line at the beginning
             let processedText = text.replace(/^EN\s*\n?/m, '').trim();
             
-            // Replace euronews.com URLs with language-specific versions
+            // Replace any euronews URL (with or without subdomain) with language-specific version
             if (euronewsUrls[targetLang]) {
-                processedText = processedText.replace(/euronews\.com/g, euronewsUrls[targetLang]);
+                // Match any euronews URL pattern (with or without subdomain)
+                processedText = processedText.replace(/(?:https?:\/\/)?(?:[a-z]+\.)?euronews\.com/g, euronewsUrls[targetLang]);
             }
             
             return processedText;
+        }
+
+        // Apply URL adaptation to translated text
+        function adaptEuronewsUrls(text, targetLang) {
+            if (euronewsUrls[targetLang]) {
+                // Replace any euronews URL pattern in translated text
+                return text.replace(/(?:https?:\/\/)?(?:[a-z]+\.)?euronews\.com/g, euronewsUrls[targetLang]);
+            }
+            return text;
         }
 
         // Initialize Office
@@ -605,12 +615,8 @@
                             console.log('✅ Azure Translator success');
                             showApiStatus('✅ Azure Translator working perfectly!', 'success');
                             
-                            // Apply Euronews URL adaptation to Azure translated text as well
-                            let translatedText = result[0].translations[0].text;
-                            if (euronewsUrls[targetLang]) {
-                                translatedText = translatedText.replace(/euronews\.com/g, euronewsUrls[targetLang]);
-                            }
-                            
+                            // Apply Euronews URL adaptation to Azure translated text
+                            const translatedText = adaptEuronewsUrls(result[0].translations[0].text, targetLang);
                             return translatedText;
                         }
                     } else {
@@ -646,12 +652,8 @@
                         showApiStatus('ℹ️ Using free translation service. Add Azure key for better quality.', 'info');
                     }
                     
-                    // Apply Euronews URL adaptation to translated text as well
-                    let translatedText = data.responseData.translatedText;
-                    if (euronewsUrls[targetLang]) {
-                        translatedText = translatedText.replace(/euronews\.com/g, euronewsUrls[targetLang]);
-                    }
-                    
+                    // Apply Euronews URL adaptation to translated text
+                    const translatedText = adaptEuronewsUrls(data.responseData.translatedText, targetLang);
                     return translatedText;
                 } else {
                     throw new Error('MyMemory service unavailable');
