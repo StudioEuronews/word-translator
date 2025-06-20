@@ -397,6 +397,7 @@
     <script>
         // Global variables
         let translatedContent = {};
+        let isOfficeReady = false;
 
         // Languages with ISO 639-1 codes
         const languages = {
@@ -431,57 +432,58 @@
             'tr': 'tr.euronews.com'
         };
 
-        // Initialize Office - Multiple methods for better compatibility
-        if (typeof Office !== 'undefined') {
-            Office.onReady((info) => {
-                console.log('Office.onReady called');
-                if (info.host === Office.HostType.Word) {
-                    console.log('Add-in loaded in Word');
-                    initializeAddIn();
-                } else {
-                    console.log('Not running in Word, host:', info.host);
-                    initializeAddIn(); // Initialize anyway for testing
-                }
-            });
-        } else {
-            // Fallback if Office is not available
-            console.log('Office not available, initializing anyway');
-            document.addEventListener('DOMContentLoaded', initializeAddIn);
+        // Wait for page to load, then initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, waiting for Office...');
+            
+            // Try multiple initialization approaches
+            setTimeout(initializeWhenReady, 500);
+        });
+
+        function initializeWhenReady() {
+            console.log('Attempting initialization...');
+            
+            if (typeof Office !== 'undefined' && Office.onReady) {
+                console.log('Office found, calling Office.onReady...');
+                Office.onReady(function(info) {
+                    console.log('Office.onReady success!', info);
+                    isOfficeReady = true;
+                    setupEventListeners();
+                    loadSavedApiKey();
+                });
+            } else {
+                console.log('Office not ready, retrying in 1 second...');
+                setTimeout(initializeWhenReady, 1000);
+            }
         }
 
-        // Alternative initialization method
-        Office.initialize = function (reason) {
-            console.log('Office.initialize called with reason:', reason);
-            initializeAddIn();
-        };
-
-        function initializeAddIn() {
-            console.log('Initializing add-in...');
-            
-            // Wait a bit for DOM to be ready
-            setTimeout(() => {
+        // Fallback initialization
+        if (typeof Office !== 'undefined') {
+            Office.initialize = function(reason) {
+                console.log('Office.initialize called:', reason);
+                isOfficeReady = true;
+                setupEventListeners();
                 loadSavedApiKey();
-                
-                // Attach event listeners
-                const translateBtn = document.getElementById('translateBtn');
-                const exportBtn = document.getElementById('exportBtn');
-                
-                if (translateBtn) {
-                    translateBtn.addEventListener('click', startTranslation);
-                    console.log('Translate button event listener attached');
-                } else {
-                    console.error('Translate button not found');
-                }
-                
-                if (exportBtn) {
-                    exportBtn.addEventListener('click', exportTextFiles);
-                    console.log('Export button event listener attached');
-                } else {
-                    console.error('Export button not found');
-                }
-                
-                console.log('Add-in initialization complete');
-            }, 100);
+            };
+        }
+
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+            
+            const translateBtn = document.getElementById('translateBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            
+            if (translateBtn) {
+                translateBtn.addEventListener('click', startTranslation);
+                console.log('✅ Translate button listener attached');
+            }
+            
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportTextFiles);
+                console.log('✅ Export button listener attached');
+            }
+            
+            console.log('🎉 Add-in ready!');
         }
 
         // Clean text by removing EN line and adapting URLs
