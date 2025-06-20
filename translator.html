@@ -387,7 +387,7 @@
             // Apply formatting if requested
             if (preserveFormat) {
                 textRange.font.size = 12;
-                textRange.paragraphFormat.spaceAfter = 6;
+                // Skip paragraphFormat.spaceAfter as it's not always available in Word Online
             }
 
             await context.sync();
