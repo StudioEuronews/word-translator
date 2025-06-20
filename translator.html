@@ -115,7 +115,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .translate-btn:hover {
@@ -124,6 +124,32 @@
         }
 
         .translate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .export-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #FF6B6B, #FF5252);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .export-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
@@ -353,6 +379,10 @@
                 🚀 Start Translation
             </button>
 
+            <button class="export-btn" onclick="exportAudio()" disabled id="audioBtn">
+                🎵 Export Audio Files
+            </button>
+
             <div class="progress-container" id="progressContainer">
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
@@ -365,20 +395,20 @@
     </div>
 
     <script>
-        // Languages with ISO 639-1 codes
+        // Languages with ISO 639-1 codes and Azure voice names
         const languages = {
-            'fr': { name: 'French' },
-            'de': { name: 'German' },
-            'it': { name: 'Italian' },
-            'es': { name: 'Spanish' },
-            'pt': { name: 'Portuguese' },
-            'ru': { name: 'Russian' },
-            'el': { name: 'Greek' },
-            'hu': { name: 'Hungarian' },
-            'pl': { name: 'Polish' },
-            'fa': { name: 'Farsi' },
-            'ar': { name: 'Arabic' },
-            'tr': { name: 'Turkish' }
+            'fr': { name: 'French', voice: 'fr-FR-DeniseNeural' },
+            'de': { name: 'German', voice: 'de-DE-KatjaNeural' },
+            'it': { name: 'Italian', voice: 'it-IT-ElsaNeural' },
+            'es': { name: 'Spanish', voice: 'es-ES-ElviraNeural' },
+            'pt': { name: 'Portuguese', voice: 'pt-PT-RaquelNeural' },
+            'ru': { name: 'Russian', voice: 'ru-RU-SvetlanaNeural' },
+            'el': { name: 'Greek', voice: 'el-GR-AthinaNeural' },
+            'hu': { name: 'Hungarian', voice: 'hu-HU-NoemiNeural' },
+            'pl': { name: 'Polish', voice: 'pl-PL-ZofiaNeural' },
+            'fa': { name: 'Farsi', voice: 'fa-IR-DilaraNeural' },
+            'ar': { name: 'Arabic', voice: 'ar-SA-ZariyahNeural' },
+            'tr': { name: 'Turkish', voice: 'tr-TR-EmelNeural' }
         };
 
         // Euronews URL mapping
@@ -429,12 +459,16 @@
             }
         });
 
+        // Global variable to store translated content for audio export
+        let translatedContent = {};
+
         // Load saved API key from localStorage
         function loadSavedApiKey() {
             try {
                 const savedKey = localStorage.getItem('azureApiKey');
                 const savedRegion = localStorage.getItem('azureRegion');
                 const saveKeyEnabled = localStorage.getItem('saveApiKey') === 'true';
+                const audioEnabled = localStorage.getItem('enableAudio') === 'true';
                 
                 if (savedKey && saveKeyEnabled) {
                     document.getElementById('azureApiKey').value = savedKey;
@@ -444,6 +478,10 @@
                 
                 if (savedRegion) {
                     document.getElementById('azureRegion').value = savedRegion;
+                }
+                
+                if (audioEnabled) {
+                    document.getElementById('enableAudio').checked = true;
                 }
             } catch (error) {
                 console.log('Could not load saved settings');
@@ -455,6 +493,7 @@
             const apiKey = document.getElementById('azureApiKey').value.trim();
             const region = document.getElementById('azureRegion').value;
             const shouldSave = document.getElementById('saveApiKey').checked;
+            const audioEnabled = document.getElementById('enableAudio').checked;
             
             try {
                 if (shouldSave && apiKey) {
@@ -466,6 +505,8 @@
                     localStorage.removeItem('azureRegion');
                     localStorage.removeItem('saveApiKey');
                 }
+                
+                localStorage.setItem('enableAudio', audioEnabled.toString());
             } catch (error) {
                 console.log('Could not save settings');
             }
@@ -480,6 +521,116 @@
             setTimeout(() => {
                 status.style.display = 'none';
             }, 5000);
+        }
+
+        // Export audio for all translated languages
+        async function exportAudio() {
+            const userApiKey = document.getElementById('azureApiKey').value.trim();
+            const userRegion = document.getElementById('azureRegion').value;
+            
+            if (!userApiKey) {
+                showStatus('Azure API key required for audio export.', 'error');
+                return;
+            }
+            
+            if (Object.keys(translatedContent).length === 0) {
+                showStatus('Please translate text first before exporting audio.', 'error');
+                return;
+            }
+            
+            const button = document.getElementById('audioBtn');
+            button.disabled = true;
+            button.textContent = '🎵 Generating audio...';
+            
+            try {
+                let successCount = 0;
+                const totalLanguages = Object.keys(translatedContent).length;
+                
+                for (const [langCode, content] of Object.entries(translatedContent)) {
+                    try {
+                        await generateAudioFile(content.text, langCode, content.language, userApiKey, userRegion);
+                        successCount++;
+                    } catch (error) {
+                        console.error(`Error generating audio for ${content.language}:`, error);
+                    }
+                }
+                
+                if (successCount > 0) {
+                    showStatus(`Audio files generated successfully! (${successCount}/${totalLanguages})`, 'success');
+                } else {
+                    showStatus('Failed to generate audio files. Check your Azure configuration.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Audio export error:', error);
+                showStatus('Error during audio export.', 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '🎵 Export Audio Files';
+            }
+        }
+
+        // Generate audio file using Azure Text-to-Speech
+        async function generateAudioFile(text, langCode, langName, apiKey, region) {
+            // Clean text for speech (remove URLs and special characters)
+            const cleanText = text.replace(/https?:\/\/[^\s]+/g, '')
+                                 .replace(/[^\w\s\.,!?;]/g, ' ')
+                                 .replace(/\s+/g, ' ')
+                                 .trim();
+            
+            if (cleanText.length === 0) {
+                throw new Error('No valid text for speech synthesis');
+            }
+            
+            // Limit text length for audio (Azure TTS has limits)
+            const maxLength = 3000;
+            const speechText = cleanText.length > maxLength ? 
+                cleanText.substring(0, maxLength) + '...' : cleanText;
+            
+            const voiceName = languages[langCode].voice;
+            
+            // SSML format for Azure Text-to-Speech
+            const ssml = `
+                <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${langCode}">
+                    <voice name="${voiceName}">
+                        <prosody rate="medium" pitch="medium">
+                            ${speechText}
+                        </prosody>
+                    </voice>
+                </speak>
+            `;
+            
+            try {
+                const response = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+                    method: 'POST',
+                    headers: {
+                        'Ocp-Apim-Subscription-Key': apiKey,
+                        'Content-Type': 'application/ssml+xml',
+                        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
+                    },
+                    body: ssml
+                });
+                
+                if (response.ok) {
+                    const audioBlob = await response.blob();
+                    
+                    // Create download link
+                    const url = URL.createObjectURL(audioBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${langName.toLowerCase()}_audio.mp3`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    console.log(`✅ Audio generated for ${langName}`);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                throw new Error(`Audio generation failed for ${langName}: ${error.message}`);
+            }
         }
 
         async function startTranslation() {
@@ -498,6 +649,7 @@
             button.textContent = '⏳ Translation in progress...';
 
             showProgress(true);
+            translatedContent = {}; // Reset translated content
 
             try {
                 await Word.run(async (context) => {
@@ -525,6 +677,12 @@
                             
                             const translatedText = await translateText(processedText, langCode);
                             await insertTranslation(context, translatedText, langName, langCode);
+                            
+                            // Store translated content for audio export
+                            translatedContent[langCode] = {
+                                text: translatedText,
+                                language: langName
+                            };
                         } catch (error) {
                             console.error(`Error translating to ${langName}:`, error);
                             await insertTranslation(context, `[Translation error for ${langName}]`, langName, langCode);
@@ -537,6 +695,13 @@
                     setTimeout(() => {
                         showProgress(false);
                         showStatus('Translation successful! The document has been updated.', 'success');
+                        
+                        // Enable audio export button if audio is enabled and translations exist
+                        const audioEnabled = document.getElementById('enableAudio').checked;
+                        const userApiKey = document.getElementById('azureApiKey').value.trim();
+                        if (audioEnabled && userApiKey && Object.keys(translatedContent).length > 0) {
+                            document.getElementById('audioBtn').disabled = false;
+                        }
                     }, 1000);
                 });
 
