@@ -30,7 +30,7 @@
     <Host Name="Document" />
   </Hosts>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://studioeuronews.github.io/word-translator/translator.xslt" />
+    <SourceLocation DefaultValue="https://studioeuronews.github.io/word-translator/translator.html" />
   </DefaultSettings>
   
   <!-- End TaskPane Mode integration. -->
@@ -116,7 +116,7 @@
       </bt:Images>
       <bt:Urls>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://studioeuronews.github.io/word-translator/"/>
-        <bt:Url id="Contoso.Taskpane.Url" DefaultValue="https://studioeuronews.github.io/word-translator/translator.xslt"/>
+        <bt:Url id="Contoso.Taskpane.Url" DefaultValue="https://studioeuronews.github.io/word-translator/translator.html"/>
         <bt:Url id="Contoso.DesktopFunctionFile.Url" DefaultValue="https://studioeuronews.github.io/word-translator/functions.js"/>
       </bt:Urls>
       <!-- ShortStrings max characters==125. -->
