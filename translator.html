@@ -187,46 +187,46 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌍 Traducteur Multilingue</h1>
+            <h1>🌍 Multilingual Translator</h1>
         </div>
         
         <div class="content">
             <div class="language-grid">
                 <div class="language-option">
                     <input type="checkbox" id="fr" value="fr" checked>
-                    <label for="fr"><span class="flag">🇫🇷</span>Français</label>
+                    <label for="fr"><span class="flag">🇫🇷</span>French</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="de" value="de" checked>
-                    <label for="de"><span class="flag">🇩🇪</span>Allemand</label>
+                    <label for="de"><span class="flag">🇩🇪</span>German</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="it" value="it" checked>
-                    <label for="it"><span class="flag">🇮🇹</span>Italien</label>
+                    <label for="it"><span class="flag">🇮🇹</span>Italian</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="es" value="es" checked>
-                    <label for="es"><span class="flag">🇪🇸</span>Espagnol</label>
+                    <label for="es"><span class="flag">🇪🇸</span>Spanish</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="pt" value="pt" checked>
-                    <label for="pt"><span class="flag">🇵🇹</span>Portugais</label>
+                    <label for="pt"><span class="flag">🇵🇹</span>Portuguese</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="ru" value="ru" checked>
-                    <label for="ru"><span class="flag">🇷🇺</span>Russe</label>
+                    <label for="ru"><span class="flag">🇷🇺</span>Russian</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="el" value="el" checked>
-                    <label for="el"><span class="flag">🇬🇷</span>Grec</label>
+                    <label for="el"><span class="flag">🇬🇷</span>Greek</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="hu" value="hu" checked>
-                    <label for="hu"><span class="flag">🇭🇺</span>Hongrois</label>
+                    <label for="hu"><span class="flag">🇭🇺</span>Hungarian</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="pl" value="pl" checked>
-                    <label for="pl"><span class="flag">🇵🇱</span>Polonais</label>
+                    <label for="pl"><span class="flag">🇵🇱</span>Polish</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="fa" value="fa" checked>
@@ -234,28 +234,28 @@
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="ar" value="ar">
-                    <label for="ar"><span class="flag">🇸🇦</span>Arabe</label>
+                    <label for="ar"><span class="flag">🇸🇦</span>Arabic</label>
                 </div>
                 <div class="language-option">
                     <input type="checkbox" id="tr" value="tr">
-                    <label for="tr"><span class="flag">🇹🇷</span>Turc</label>
+                    <label for="tr"><span class="flag">🇹🇷</span>Turkish</label>
                 </div>
             </div>
 
             <div class="controls">
                 <div class="option-group">
-                    <h3>Options de traduction</h3>
+                    <h3>Translation Options</h3>
                     <div class="checkbox-option">
                         <input type="checkbox" id="preserveFormat" checked>
-                        <label for="preserveFormat">Conserver la mise en page</label>
+                        <label for="preserveFormat">Preserve layout</label>
                     </div>
                     <div class="checkbox-option">
                         <input type="checkbox" id="redText" checked>
-                        <label for="redText">Texte traduit en rouge</label>
+                        <label for="redText">Translated text in red</label>
                     </div>
                     <div class="checkbox-option">
                         <input type="checkbox" id="newPage" checked>
-                        <label for="newPage">Nouvelle page par langue</label>
+                        <label for="newPage">New page per language</label>
                     </div>
                 </div>
 
@@ -263,7 +263,7 @@
             </div>
 
             <button class="translate-btn" onclick="startTranslation()">
-                🚀 Commencer la traduction
+                🚀 Start Translation
             </button>
 
 
@@ -290,33 +290,33 @@
             }
         });
 
-        // Langues avec codes ISO 3166 (pays) et ISO 639-1 (langues)
+        // Languages with ISO 639-1 codes
         const languages = {
-            'fr': { name: 'Français', country: 'FR' },
-            'de': { name: 'Allemand', country: 'DE' },
-            'it': { name: 'Italien', country: 'IT' },
-            'es': { name: 'Espagnol', country: 'ES' },
-            'pt': { name: 'Portugais', country: 'PT' },
-            'ru': { name: 'Russe', country: 'RU' },
-            'el': { name: 'Grec', country: 'GR' },
-            'hu': { name: 'Hongrois', country: 'HU' },
-            'pl': { name: 'Polonais', country: 'PL' },
-            'fa': { name: 'Farsi', country: 'IR' },
-            'ar': { name: 'Arabe', country: 'SA' },
-            'tr': { name: 'Turc', country: 'TR' }
+            'fr': { name: 'French' },
+            'de': { name: 'German' },
+            'it': { name: 'Italian' },
+            'es': { name: 'Spanish' },
+            'pt': { name: 'Portuguese' },
+            'ru': { name: 'Russian' },
+            'el': { name: 'Greek' },
+            'hu': { name: 'Hungarian' },
+            'pl': { name: 'Polish' },
+            'fa': { name: 'Farsi' },
+            'ar': { name: 'Arabic' },
+            'tr': { name: 'Turkish' }
         };
 
         async function startTranslation() {
             const selectedLanguages = getSelectedLanguages();
             
             if (selectedLanguages.length === 0) {
-                showStatus('Veuillez sélectionner au moins une langue.', 'error');
+                showStatus('Please select at least one language.', 'error');
                 return;
             }
 
             const button = document.querySelector('.translate-btn');
             button.disabled = true;
-            button.textContent = '⏳ Traduction en cours...';
+            button.textContent = '⏳ Translation in progress...';
 
             showProgress(true);
             translatedContent = {};
@@ -331,15 +331,15 @@
                     const originalText = body.text;
                     
                     if (!originalText.trim()) {
-                        throw new Error('Le document est vide.');
+                        throw new Error('The document is empty.');
                     }
 
-                    // Traduire pour chaque langue sélectionnée
+                    // Translate for each selected language
                     for (let i = 0; i < selectedLanguages.length; i++) {
                         const langCode = selectedLanguages[i];
                         const langName = languages[langCode].name;
                         
-                        updateProgress((i / selectedLanguages.length) * 100, `Traduction en ${langName}...`);
+                        updateProgress((i / selectedLanguages.length) * 100, `Translating to ${langName}...`);
                         
                         try {
                             const translatedText = await translateText(originalText, langCode);
@@ -349,8 +349,8 @@
                             await insertTranslation(context, translatedText, langName, langCode);
                             
                         } catch (error) {
-                            console.error(`Erreur lors de la traduction en ${langName}:`, error);
-                            translatedContent[langCode] = `[Erreur de traduction pour ${langName}]`;
+                            console.error(`Error translating to ${langName}:`, error);
+                            translatedContent[langCode] = `[Translation error for ${langName}]`;
                         }
                     }
 
@@ -370,12 +370,12 @@
                 });
 
             } catch (error) {
-                console.error('Erreur:', error);
-                showStatus(`Erreur: ${error.message}`, 'error');
+                console.error('Error:', error);
+                showStatus(`Error: ${error.message}`, 'error');
                 showProgress(false);
             } finally {
                 button.disabled = false;
-                button.textContent = '🚀 Commencer la traduction';
+                button.textContent = '🚀 Start Translation';
             }
         }
 
@@ -384,28 +384,27 @@
             const redText = document.getElementById('redText').checked;
             const newPage = document.getElementById('newPage').checked;
 
-            // Insérer un saut de page si demandé
+            // Insert page break if requested
             if (newPage) {
                 const range = context.document.body.insertBreak(Word.BreakType.page, Word.InsertLocation.end);
             }
 
-            // Insérer le titre de la langue avec code pays ISO 3166
-            const countryCode = languages[langCode].country;
-            const titleRange = context.document.body.insertText(`\n\n=== ${langName.toUpperCase()} (${countryCode}) ===\n\n`, Word.InsertLocation.end);
+            // Insert language title
+            const titleRange = context.document.body.insertText(`\n\n=== ${langName.toUpperCase()} ===\n\n`, Word.InsertLocation.end);
             titleRange.font.bold = true;
             titleRange.font.size = 16;
             titleRange.font.color = '#2196F3';
 
-            // Insérer le texte traduit
+            // Insert translated text
             const textRange = context.document.body.insertText(translatedText, Word.InsertLocation.end);
             
             if (redText) {
                 textRange.font.color = '#FF0000';
             }
 
-            // Appliquer le formatage si demandé
+            // Apply formatting if requested
             if (preserveFormat) {
-                // Copier certains styles du document original
+                // Copy some styles from original document
                 textRange.font.size = 12;
                 textRange.paragraphFormat.spaceAfter = 6;
             }
@@ -433,7 +432,7 @@
                     }
                 }
             } catch (error) {
-                console.log('Traducteur Microsoft non disponible, utilisation du service de fallback');
+                console.log('Microsoft Translator not available, using fallback service');
             }
             
             try {
@@ -444,11 +443,11 @@
                 if (data.responseData && data.responseData.translatedText) {
                     return data.responseData.translatedText;
                 } else {
-                    throw new Error('Service de traduction indisponible');
+                    throw new Error('Translation service unavailable');
                 }
             } catch (error) {
-                // Dernier fallback: texte simulé avec nom complet de la langue
-                return `[Traduction ${languages[targetLang].name}] ${text}`;
+                // Last fallback: simulated text with full language name
+                return `[${languages[targetLang].name} Translation] ${text}`;
             }
         }
 
