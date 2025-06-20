@@ -375,11 +375,11 @@
                 </div>
             </div>
 
-            <button class="translate-btn" onclick="startTranslation()">
+            <button class="translate-btn" id="translateBtn">
                 🚀 Start Translation
             </button>
 
-            <button class="export-btn" onclick="exportTextFiles()" disabled id="exportBtn">
+            <button class="export-btn" id="exportBtn" disabled>
                 📁 Export TXT Files
             </button>
 
@@ -456,6 +456,10 @@
             if (info.host === Office.HostType.Word) {
                 console.log('Add-in loaded in Word');
                 loadSavedApiKey();
+                
+                // Attach event listeners
+                document.getElementById('translateBtn').addEventListener('click', startTranslation);
+                document.getElementById('exportBtn').addEventListener('click', exportTextFiles);
             }
         });
 
