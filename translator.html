@@ -115,7 +115,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .translate-btn:hover {
@@ -124,32 +124,6 @@
         }
 
         .translate-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .export-btn {
-            width: 100%;
-            background: linear-gradient(45deg, #FF6B6B, #FF5252);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .export-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .export-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
@@ -379,10 +353,6 @@
                 🚀 Start Translation
             </button>
 
-            <button class="export-btn" onclick="exportAudio()" disabled id="audioBtn">
-                🎵 Export Audio Files
-            </button>
-
             <div class="progress-container" id="progressContainer">
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
@@ -395,20 +365,20 @@
     </div>
 
     <script>
-        // Languages with ISO 639-1 codes and Azure voice names
+        // Languages with ISO 639-1 codes
         const languages = {
-            'fr': { name: 'French', voice: 'fr-FR-DeniseNeural' },
-            'de': { name: 'German', voice: 'de-DE-KatjaNeural' },
-            'it': { name: 'Italian', voice: 'it-IT-ElsaNeural' },
-            'es': { name: 'Spanish', voice: 'es-ES-ElviraNeural' },
-            'pt': { name: 'Portuguese', voice: 'pt-PT-RaquelNeural' },
-            'ru': { name: 'Russian', voice: 'ru-RU-SvetlanaNeural' },
-            'el': { name: 'Greek', voice: 'el-GR-AthinaNeural' },
-            'hu': { name: 'Hungarian', voice: 'hu-HU-NoemiNeural' },
-            'pl': { name: 'Polish', voice: 'pl-PL-ZofiaNeural' },
-            'fa': { name: 'Farsi', voice: 'fa-IR-DilaraNeural' },
-            'ar': { name: 'Arabic', voice: 'ar-SA-ZariyahNeural' },
-            'tr': { name: 'Turkish', voice: 'tr-TR-EmelNeural' }
+            'fr': { name: 'French' },
+            'de': { name: 'German' },
+            'it': { name: 'Italian' },
+            'es': { name: 'Spanish' },
+            'pt': { name: 'Portuguese' },
+            'ru': { name: 'Russian' },
+            'el': { name: 'Greek' },
+            'hu': { name: 'Hungarian' },
+            'pl': { name: 'Polish' },
+            'fa': { name: 'Farsi' },
+            'ar': { name: 'Arabic' },
+            'tr': { name: 'Turkish' }
         };
 
         // Euronews URL mapping
@@ -459,16 +429,12 @@
             }
         });
 
-        // Global variable to store translated content for audio export
-        let translatedContent = {};
-
         // Load saved API key from localStorage
         function loadSavedApiKey() {
             try {
                 const savedKey = localStorage.getItem('azureApiKey');
                 const savedRegion = localStorage.getItem('azureRegion');
                 const saveKeyEnabled = localStorage.getItem('saveApiKey') === 'true';
-                const audioEnabled = localStorage.getItem('enableAudio') === 'true';
                 
                 if (savedKey && saveKeyEnabled) {
                     document.getElementById('azureApiKey').value = savedKey;
@@ -478,10 +444,6 @@
                 
                 if (savedRegion) {
                     document.getElementById('azureRegion').value = savedRegion;
-                }
-                
-                if (audioEnabled) {
-                    document.getElementById('enableAudio').checked = true;
                 }
             } catch (error) {
                 console.log('Could not load saved settings');
@@ -493,7 +455,6 @@
             const apiKey = document.getElementById('azureApiKey').value.trim();
             const region = document.getElementById('azureRegion').value;
             const shouldSave = document.getElementById('saveApiKey').checked;
-            const audioEnabled = document.getElementById('enableAudio').checked;
             
             try {
                 if (shouldSave && apiKey) {
@@ -505,8 +466,6 @@
                     localStorage.removeItem('azureRegion');
                     localStorage.removeItem('saveApiKey');
                 }
-                
-                localStorage.setItem('enableAudio', audioEnabled.toString());
             } catch (error) {
                 console.log('Could not save settings');
             }
@@ -539,7 +498,6 @@
             button.textContent = '⏳ Translation in progress...';
 
             showProgress(true);
-            translatedContent = {}; // Reset translated content
 
             try {
                 await Word.run(async (context) => {
@@ -567,12 +525,6 @@
                             
                             const translatedText = await translateText(processedText, langCode);
                             await insertTranslation(context, translatedText, langName, langCode);
-                            
-                            // Store translated content for audio export
-                            translatedContent[langCode] = {
-                                text: translatedText,
-                                language: langName
-                            };
                         } catch (error) {
                             console.error(`Error translating to ${langName}:`, error);
                             await insertTranslation(context, `[Translation error for ${langName}]`, langName, langCode);
@@ -585,13 +537,6 @@
                     setTimeout(() => {
                         showProgress(false);
                         showStatus('Translation successful! The document has been updated.', 'success');
-                        
-                        // Enable audio export button if audio is enabled and translations exist
-                        const audioEnabled = document.getElementById('enableAudio').checked;
-                        const userApiKey = document.getElementById('azureApiKey').value.trim();
-                        if (audioEnabled && userApiKey && Object.keys(translatedContent).length > 0) {
-                            document.getElementById('audioBtn').disabled = false;
-                        }
                     }, 1000);
                 });
 
