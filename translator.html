@@ -86,6 +86,23 @@
             margin: 0 0 10px 0;
             font-size: 1em;
             color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .option-group h3 .toggle-icon {
+            font-size: 0.8em;
+            transition: transform 0.3s;
+        }
+
+        .option-group h3 .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .option-group.collapsed .option-content {
+            display: none;
         }
 
         .checkbox-option {
@@ -104,9 +121,8 @@
             font-size: 0.9em;
         }
 
-        .translate-btn {
+        .translate-btn, .export-btn {
             width: 100%;
-            background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
             border: none;
             padding: 15px;
@@ -115,15 +131,30 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+        }
+
+        .translate-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+
+        .export-btn {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+        }
+
+        .translate-btn:hover, .export-btn:hover {
+            transform: translateY(-2px);
         }
 
         .translate-btn:hover {
-            transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
         }
 
-        .translate-btn:disabled {
+        .export-btn:hover {
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .translate-btn:disabled, .export-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
@@ -245,6 +276,26 @@
             color: #0c5460;
             border: 1px solid #bee5eb;
         }
+
+        .ssml-export {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #FF9800;
+        }
+
+        .ssml-export h4 {
+            margin: 0 0 10px 0;
+            color: #E65100;
+            font-size: 0.9em;
+        }
+
+        .ssml-export p {
+            margin: 0;
+            font-size: 0.85em;
+            color: #666;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -306,51 +357,72 @@
             </div>
 
             <div class="controls">
-                <div class="option-group">
-                    <h3>Azure Translator (Optional)</h3>
-                    <div class="api-config">
-                        <div class="input-group">
-                            <label for="azureApiKey">API Key:</label>
-                            <input type="password" id="azureApiKey" placeholder="Enter your Azure API key (optional)" />
+                <div class="option-group" id="azureGroup">
+                    <h3 onclick="toggleSection('azureGroup')">
+                        Azure Translator (Optional)
+                        <span class="toggle-icon">▼</span>
+                    </h3>
+                    <div class="option-content">
+                        <div class="api-config">
+                            <div class="input-group">
+                                <label for="azureApiKey">API Key:</label>
+                                <input type="password" id="azureApiKey" placeholder="Enter your Azure API key (optional)" />
+                            </div>
+                            <div class="input-group">
+                                <label for="azureRegion">Region:</label>
+                                <select id="azureRegion">
+                                    <option value="westeurope">West Europe</option>
+                                    <option value="eastus">East US</option>
+                                    <option value="westus2">West US 2</option>
+                                    <option value="southeastasia">Southeast Asia</option>
+                                    <option value="northeurope">North Europe</option>
+                                    <option value="centralus">Central US</option>
+                                </select>
+                            </div>
+                            <div class="checkbox-option">
+                                <input type="checkbox" id="saveApiKey">
+                                <label for="saveApiKey">Remember my API key (stored locally)</label>
+                            </div>
+                            <div class="api-status" id="apiStatus"></div>
                         </div>
-                        <div class="input-group">
-                            <label for="azureRegion">Region:</label>
-                            <select id="azureRegion">
-                                <option value="westeurope">West Europe</option>
-                                <option value="eastus">East US</option>
-                                <option value="westus2">West US 2</option>
-                                <option value="southeastasia">Southeast Asia</option>
-                                <option value="northeurope">North Europe</option>
-                                <option value="centralus">Central US</option>
-                            </select>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" id="saveApiKey">
-                            <label for="saveApiKey">Remember my API key (stored locally)</label>
-                        </div>
-                        <div class="api-status" id="apiStatus"></div>
                     </div>
                 </div>
                 
                 <div class="option-group">
                     <h3>Translation Options</h3>
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="preserveFormat" checked>
-                        <label for="preserveFormat">Preserve layout</label>
+                    <div class="option-content">
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="preserveFormat" checked>
+                            <label for="preserveFormat">Preserve layout</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="redText" checked>
+                            <label for="redText">Translated text in red</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="newPage" checked>
+                            <label for="newPage">New page per language</label>
+                        </div>
                     </div>
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="redText" checked>
-                        <label for="redText">Translated text in red</label>
-                    </div>
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="newPage" checked>
-                        <label for="newPage">New page per language</label>
+                </div>
+                
+                <div class="option-group">
+                    <h3>SSML Export Options</h3>
+                    <div class="option-content">
+                        <div class="ssml-export">
+                            <h4>🎤 Azure Speech Service</h4>
+                            <p>Export the entire document as a single SSML text file. Each language section will be announced in English, then read in the target language with specific voice settings.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <button class="translate-btn" onclick="startTranslation()">
                 🚀 Start Translation
+            </button>
+            
+            <button class="export-btn" onclick="exportSSMLFiles()" id="exportBtn">
+                📁 Export SSML File
             </button>
 
             <div class="progress-container" id="progressContainer">
@@ -365,21 +437,65 @@
     </div>
 
     <script>
-        // Languages with ISO 639-1 codes and Azure voice names
+        // Languages with specific voice configurations
         const languages = {
-            'fr': { name: 'French', voice: 'fr-FR-DeniseNeural' },
-            'de': { name: 'German', voice: 'de-DE-KatjaNeural' },
-            'it': { name: 'Italian', voice: 'it-IT-ElsaNeural' },
-            'es': { name: 'Spanish', voice: 'es-ES-ElviraNeural' },
-            'pt': { name: 'Portuguese', voice: 'pt-PT-RaquelNeural' },
-            'ru': { name: 'Russian', voice: 'ru-RU-SvetlanaNeural' },
-            'el': { name: 'Greek', voice: 'el-GR-AthinaNeural' },
-            'hu': { name: 'Hungarian', voice: 'hu-HU-NoemiNeural' },
-            'pl': { name: 'Polish', voice: 'pl-PL-ZofiaNeural' },
-            'fa': { name: 'Farsi', voice: 'fa-IR-DilaraNeural' },
-            'ar': { name: 'Arabic', voice: 'ar-SA-ZariyahNeural' },
-            'tr': { name: 'Turkish', voice: 'tr-TR-EmelNeural' }
+            'fr': { name: 'French', iso: 'FR', voice: 'fr-FR-VivienneMultilingualNeural', prosody: 'rate="-3.00%"', ssmlLang: 'fr-FR' },
+            'de': { name: 'German', iso: 'DE', voice: 'de-DE-SeraphinaMultilingualNeural', prosody: '', ssmlLang: 'de-DE' },
+            'it': { name: 'Italian', iso: 'IT', voice: 'it-IT-GiuseppeMultilingualNeural', prosody: 'pitch="low"', ssmlLang: 'it-IT' },
+            'es': { name: 'Spanish', iso: 'ES', voice: 'es-ES-XimenaMultilingualNeural', prosody: 'pitch="low"', ssmlLang: 'es-ES' },
+            'pt': { name: 'Portuguese', iso: 'PT', voice: 'pt-PT-RaquelNeural', prosody: '', ssmlLang: 'pt-PT' },
+            'ru': { name: 'Russian', iso: 'RU', voice: 'ru-RU-DmitryNeural', prosody: '', ssmlLang: 'ru-RU' },
+            'el': { name: 'Greek', iso: 'EL', voice: 'el-GR-NestorasNeural', prosody: '', ssmlLang: 'el-GR' },
+            'hu': { name: 'Hungarian', iso: 'HU', voice: 'hu-HU-TamasNeural', prosody: '', ssmlLang: 'hu-HU' },
+            'pl': { name: 'Polish', iso: 'PL', voice: 'pl-PL-MarekNeural', prosody: 'rate="-2.00%"', ssmlLang: 'pl-PL' },
+            'fa': { name: 'Farsi', iso: 'FA', voice: 'fa-IR-FaridNeural', prosody: '', ssmlLang: 'fa-IR' },
+            'ar': { name: 'Arabic', iso: 'AR', voice: 'ar-SA-HamedNeural', prosody: '', ssmlLang: 'ar-SA' },
+            'tr': { name: 'Turkish', iso: 'TR', voice: 'tr-TR-AhmetNeural', prosody: '', ssmlLang: 'tr-TR' }
         };
+
+        // English voice configuration
+        const englishVoice = {
+            name: 'English',
+            iso: 'EN',
+            voice: 'en-GB-RyanNeural',
+            prosody: 'rate="-2.00%" pitch="low"',
+            ssmlLang: 'en-GB'
+        };
+
+        // Store translated content for SSML export
+        let translatedContent = {};
+
+        // Generate complete SSML document with all languages
+        function generateCompleteSSML(documentSections) {
+            let ssmlContent = '<?xml version="1.0" encoding="UTF-8"?><speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-GB">';
+            
+            for (let i = 0; i < documentSections.length; i++) {
+                const section = documentSections[i];
+                const cleanText = section.content
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&apos;');
+                
+                // Add line break before each language section
+                ssmlContent += '\n';
+                
+                // Add the content in the target language
+                const config = section.langCode === 'en' ? englishVoice : languages[section.langCode];
+                if (config.prosody) {
+                    ssmlContent += `<voice name="${config.voice}"><prosody ${config.prosody}>${cleanText}</prosody></voice>`;
+                } else {
+                    ssmlContent += `<voice name="${config.voice}">${cleanText}</voice>`;
+                }
+                
+                // Add line break after each language section
+                ssmlContent += '\n';
+            }
+            
+            ssmlContent += '</speak>';
+            return ssmlContent;
+        }
 
         // Euronews URL mapping
         const euronewsUrls = {
@@ -397,6 +513,15 @@
             'fa': 'parsi.euronews.com',
             'tr': 'tr.euronews.com'
         };
+
+        // Toggle collapsible sections
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const icon = section.querySelector('.toggle-icon');
+            
+            section.classList.toggle('collapsed');
+            icon.classList.toggle('collapsed');
+        }
 
         // Clean text by removing EN line and adapting URLs
         function processTextForTranslation(text, targetLang) {
@@ -419,6 +544,230 @@
                 return text.replace(/(?:https?:\/\/)?(?:[a-z]+\.)?euronews\.com/g, euronewsUrls[targetLang]);
             }
             return text;
+        }
+
+        // Generate SSML content with male and female voices
+        function generateSSML(text, langCode) {
+            const config = langCode === 'en' ? englishConfig : languages[langCode];
+            if (!config) {
+                console.error(`Configuration not found for language: ${langCode}`);
+                return `<!-- Error: Configuration not found for ${langCode} -->`;
+            }
+            
+            const cleanText = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+
+            return `<?xml version="1.0" encoding="UTF-8"?><speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="${config.ssmlLang}"><voice name="${config.voiceMale}"><prosody rate="+10.00%">${cleanText}</prosody></voice>
+<break time="1s"/><voice name="${config.voiceFemale}"><prosody rate="+10.00%">${cleanText}</prosody></voice></speak>`;
+        }
+
+        // Download file function
+        function downloadFile(content, filename, contentType = 'text/plain') {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Export single SSML file with all languages
+        async function exportSSMLFiles() {
+            const button = document.getElementById('exportBtn');
+            button.disabled = true;
+            button.textContent = '📁 Generating SSML...';
+
+            try {
+                const documentSections = [];
+                let documentName = 'document_ssml'; // Default name
+
+                await Word.run(async (context) => {
+                    // Get document name - try multiple methods
+                    try {
+                        // Method 1: Try to get the document's file name
+                        const file = context.document.properties;
+                        file.load("title");
+                        await context.sync();
+                        
+                        if (file.title && file.title.trim()) {
+                            documentName = file.title.trim();
+                            console.log('Document title found:', documentName);
+                        } else {
+                            // Method 2: Try to get from URL if available (Word Online)
+                            if (window.location && window.location.href) {
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const fileName = urlParams.get('file') || urlParams.get('filename');
+                                if (fileName) {
+                                    documentName = fileName.replace(/\.[^/.]+$/, ""); // Remove extension
+                                    console.log('Document name from URL:', documentName);
+                                }
+                            }
+                            
+                            // Method 3: Try Office context if available
+                            if (!documentName || documentName === 'document_ssml') {
+                                try {
+                                    if (Office && Office.context && Office.context.document && Office.context.document.url) {
+                                        const url = Office.context.document.url;
+                                        const urlParts = url.split('/');
+                                        const fileNameWithExt = urlParts[urlParts.length - 1];
+                                        if (fileNameWithExt && fileNameWithExt !== '') {
+                                            documentName = fileNameWithExt.replace(/\.[^/.]+$/, ""); // Remove extension
+                                            console.log('Document name from Office context:', documentName);
+                                        }
+                                    }
+                                } catch (officeError) {
+                                    console.log('Office context method failed:', officeError.message);
+                                }
+                            }
+                            
+                            // Method 4: Try document settings
+                            if (!documentName || documentName === 'document_ssml') {
+                                try {
+                                    const settings = context.document.settings;
+                                    settings.load();
+                                    await context.sync();
+                                    console.log('Checking document settings for name...');
+                                } catch (settingsError) {
+                                    console.log('Settings method failed:', settingsError.message);
+                                }
+                            }
+                        }
+                        
+                        // Clean filename: remove invalid characters and decode if needed
+                        documentName = documentName
+                            .replace(/[<>:"/\\|?*]/g, '_')
+                            .replace(/%20/g, ' ') // Replace URL encoded spaces
+                            .trim();
+                        
+                        // If still default, try to extract from document content
+                        if (documentName === 'document_ssml' || !documentName) {
+                            const body = context.document.body;
+                            body.load("text");
+                            await context.sync();
+                            
+                            const firstLine = body.text.split('\n')[0].trim();
+                            if (firstLine && firstLine.length > 0 && firstLine.length < 100) {
+                                // Use first line as filename if it's reasonable length
+                                documentName = firstLine.substring(0, 50).replace(/[<>:"/\\|?*]/g, '_');
+                                console.log('Using first line as filename:', documentName);
+                            }
+                        }
+                        
+                    } catch (error) {
+                        console.log('Could not get document name, using default:', error.message);
+                        documentName = 'document_ssml';
+                    }
+                    
+                    // Get all content from the document
+                    const body = context.document.body;
+                    body.load("text");
+                    await context.sync();
+                    
+                    const fullText = body.text;
+                    console.log('Full document text length:', fullText.length);
+                    
+                    // Check if document has language markers
+                    const languageMarkerRegex = /=== ([A-Z]+) ===/g;
+                    const hasLanguageMarkers = languageMarkerRegex.test(fullText);
+                    console.log('Document has language markers:', hasLanguageMarkers);
+                    
+                    if (hasLanguageMarkers) {
+                        // Find all language markers and their positions
+                        const markers = [];
+                        const markerRegex = /=== ([A-Z]+) ===/g;
+                        let match;
+                        
+                        while ((match = markerRegex.exec(fullText)) !== null) {
+                            markers.push({
+                                iso: match[1],
+                                position: match.index,
+                                fullMatch: match[0]
+                            });
+                            console.log(`Found marker: ${match[1]} at position ${match.index}`);
+                        }
+                        
+                        // Extract English content (everything before first marker)
+                        if (markers.length > 0) {
+                            const englishContent = fullText.substring(0, markers[0].position).trim();
+                            if (englishContent) {
+                                const processedContent = processTextForTranslation(englishContent, 'en');
+                                documentSections.push({ langCode: 'en', content: processedContent });
+                                console.log(`Added English section, length: ${processedContent.length}`);
+                            }
+                        }
+                        
+                        // Extract content for each language
+                        for (let i = 0; i < markers.length; i++) {
+                            const currentMarker = markers[i];
+                            const nextMarker = markers[i + 1];
+                            
+                            // Calculate positions
+                            const markerEndPos = currentMarker.position + currentMarker.fullMatch.length;
+                            let startPos = markerEndPos;
+                            
+                            // Skip whitespace after marker
+                            while (startPos < fullText.length && /\s/.test(fullText[startPos])) {
+                                startPos++;
+                            }
+                            
+                            const endPos = nextMarker ? nextMarker.position : fullText.length;
+                            const content = fullText.substring(startPos, endPos).trim();
+                            
+                            console.log(`Processing ${currentMarker.iso}: length=${content.length}`);
+                            
+                            if (content) {
+                                let langCode = 'en';
+                                
+                                if (currentMarker.iso !== 'EN') {
+                                    const foundLangCode = Object.keys(languages).find(code => 
+                                        languages[code].iso === currentMarker.iso
+                                    );
+                                    if (foundLangCode) {
+                                        langCode = foundLangCode;
+                                    }
+                                }
+                                
+                                documentSections.push({ langCode, content });
+                                console.log(`Added ${currentMarker.iso} section`);
+                            }
+                        }
+                    } else {
+                        // No language markers - treat as single English document
+                        console.log('No language markers found, treating as English');
+                        const processedContent = processTextForTranslation(fullText, 'en');
+                        documentSections.push({ langCode: 'en', content: processedContent });
+                    }
+                    
+                    console.log('Total sections found:', documentSections.length);
+                    console.log('Using filename:', documentName);
+                    
+                    if (documentSections.length === 0) {
+                        throw new Error('No content found to export.');
+                    }
+                    
+                    // Generate complete SSML document
+                    const completeSSML = generateCompleteSSML(documentSections);
+                    
+                    // Download single text file with document name
+                    downloadFile(completeSSML, `${documentName}.txt`, 'text/plain');
+                    
+                    showStatus(`✅ SSML file "${documentName}.txt" exported! Document with ${documentSections.length} sections downloaded.`, 'success');
+                });
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                showStatus(`❌ Export error: ${error.message}`, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '📁 Export SSML File';
+            }
         }
 
         // Initialize Office
@@ -490,6 +839,9 @@
                 return;
             }
 
+            // Clear previous translated content
+            translatedContent = {};
+
             // Save API key settings
             saveApiKeyIfNeeded();
 
@@ -524,6 +876,10 @@
                             const processedText = processTextForTranslation(originalText, langCode);
                             
                             const translatedText = await translateText(processedText, langCode);
+                            
+                            // Store translated content for SSML export
+                            translatedContent[langCode] = translatedText;
+                            
                             await insertTranslation(context, translatedText, langName, langCode);
                         } catch (error) {
                             console.error(`Error translating to ${langName}:`, error);
@@ -537,6 +893,8 @@
                     setTimeout(() => {
                         showProgress(false);
                         showStatus('Translation successful! The document has been updated.', 'success');
+                        
+                        // Remove the automatic export button show since it's always visible now
                     }, 1000);
                 });
 
@@ -560,8 +918,8 @@
                 context.document.body.insertBreak(Word.BreakType.page, Word.InsertLocation.end);
             }
 
-            // Insert language title
-            const titleRange = context.document.body.insertText(`\n\n=== ${langName.toUpperCase()} ===\n\n`, Word.InsertLocation.end);
+            // Insert language title with ISO code only
+            const titleRange = context.document.body.insertText(`\n\n=== ${languages[langCode].iso} ===\n\n`, Word.InsertLocation.end);
             titleRange.font.bold = true;
             titleRange.font.size = 16;
             titleRange.font.color = '#2196F3';
