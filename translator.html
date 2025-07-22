@@ -462,8 +462,45 @@
             ssmlLang: 'en-GB'
         };
 
+        // SSML word replacements by language
+        const ssmlWordReplacements = {
+            'fr': {
+                ' euronews ': ' Euro Niouze '
+            },
+            'pt': {
+                'euronews.pt': 'EuroNews punto pt'
+            }
+            // Vous pouvez ajouter d'autres langues ici
+            // 'de': {
+            //     'example': 'Beispiel'
+            // },
+            // 'es': {
+            //     'example': 'ejemplo'
+            // }
+        };
+
         // Store translated content for SSML export
         let translatedContent = {};
+
+                // Apply SSML-specific word replacements
+        function applySSMLReplacements(text, langCode) {
+            if (!ssmlWordReplacements[langCode]) {
+                return text;
+            }
+            
+            let processedText = text;
+            const replacements = ssmlWordReplacements[langCode];
+            
+            // Apply each replacement (case-insensitive)
+            for (const [original, replacement] of Object.entries(replacements)) {
+                // Use global case-insensitive regex
+                const regex = new RegExp(original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                processedText = processedText.replace(regex, replacement);
+            }
+            
+            console.log(`Applied SSML replacements for ${langCode}:`, Object.keys(replacements).length, 'replacements');
+            return processedText;
+        }
 
         // Generate complete SSML document with all languages
         function generateCompleteSSML(documentSections) {
@@ -471,7 +508,12 @@
             
             for (let i = 0; i < documentSections.length; i++) {
                 const section = documentSections[i];
-                const cleanText = section.content
+                
+                // Apply SSML-specific word replacements
+                let processedContent = applySSMLReplacements(section.content, section.langCode);
+                
+                // Clean text for XML
+                const cleanText = processedContent
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;')
