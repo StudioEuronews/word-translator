@@ -781,7 +781,7 @@
                         
                         // Extract English content (everything before first marker)
                         if (markers.length > 0) {
-                            const englishContent = fullText.substring(0, markers[0].position).replace(/^\s+|\s+$/g, '');
+                            const englishContent = fullText.substring(0, markers[0].position).replace(/^[ \t]+|[ \t]+$/g, '');
                             if (englishContent) {
                                 const processedContent = processTextForTranslation(englishContent, 'en');
                                 documentSections.push({ langCode: 'en', content: processedContent });
@@ -804,7 +804,7 @@
                             }
                             
                             const endPos = nextMarker ? nextMarker.position : fullText.length;
-                            const content = fullText.substring(startPos, endPos).replace(/^\s+|\s+$/g, '');
+                            const content = fullText.substring(startPos, endPos).replace(/^[ \t]+|[ \t]+$/g, '');
                             
                             console.log(`Processing ${currentMarker.iso}: length=${content.length}`);
                             
