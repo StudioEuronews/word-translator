@@ -757,8 +757,6 @@
                     await context.sync();
                     
                     let fullText = body.text;
-                    // Fix line break to UTF-8
-                    fullText = fullText.replace(/\r\n/g, '\n');
                     console.log('Full document text length:', fullText.length);
                     
                     // Check if document has language markers
@@ -839,7 +837,10 @@
                     if (documentSections.length === 0) {
                         throw new Error('No content found to export.');
                     }
-                    
+                    // DEBUG Export documentSections as Text file
+                    documentSections.forEach(section => {
+                        downloadFile(section.content, `debug_04_processed_content_${section.langCode}.txt`);
+                    });
                     // Generate complete SSML document
                     const completeSSML = generateCompleteSSML(documentSections);
                     
