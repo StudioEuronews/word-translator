@@ -492,11 +492,49 @@
 
                 // Apply SSML-specific word replacements
         function applySSMLReplacements(text, langCode) {
+            let processedText = text;
+            
+            // Remove complete URLs with http:// or https:// protocol
+            // Keep simple domain names like euronews.com
+            processedText = processedText.replace(/https?:\/\/[^\s]+/g, '');
+            
+            // Fix encoding issues - normalize Unicode characters
+            processedText = processedText.normalize('NFC');
+            
+            // Replace problematic characters for SSML
+            processedText = processedText
+                // Replace typographic apostrophes with standard apostrophe
+                .replace(/['']/g, "'")
+                // Replace typographic quotes with standard quotes
+                .replace(/[""]/g, '"')
+                // Replace en/em dashes with standard hyphen
+                .replace(/[–—]/g, '-')
+                // Replace ellipsis character with three dots
+                .replace(/…/g, '...')
+                // Replace other problematic Unicode spaces
+                .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+                // Fix common encoding artifacts
+                .replace(/Ä‡/g, 'ć')
+                .replace(/Ä/g, 'č')
+                .replace(/VuÄiÄ‡/g, 'Vučić')
+                .replace(/Ä/g, 'š')
+                .replace(/Ä/g, 'ž')
+                .replace(/Ã©/g, 'é')
+                .replace(/Ã¨/g, 'è')
+                .replace(/Ã¡/g, 'á')
+                .replace(/Ã /g, 'à')
+                .replace(/Ã­/g, 'í')
+                .replace(/Ã³/g, 'ó')
+                .replace(/Ãº/g, 'ú')
+                .replace(/Ã§/g, 'ç')
+                .replace(/Ã±/g, 'ñ')
+                // Remove any remaining problematic control characters
+                .replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+            
             if (!ssmlWordReplacements[langCode]) {
-                return text;
+                return processedText;
             }
             
-            let processedText = text;
             const replacements = ssmlWordReplacements[langCode];
             
             // Apply each replacement (case-insensitive)
