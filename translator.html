@@ -562,7 +562,6 @@
                 
                 // Apply SSML-specific word replacements
                 let processedContent = applySSMLReplacements(section.content, section.langCode);
-                downloadFile(processedContent, `debug_04_processed_content_${section.langCode}.txt`); // DEBUG
                 
                 // Clean text for XML (preserve line breaks)
                 const cleanText = processedContent
@@ -581,7 +580,6 @@
             }
             
             ssmlContent += '</speak>';
-            downloadFile(ssmlContent, 'debug_05_final_ssml.txt'); // DEBUG
             return ssmlContent;
         }
 
@@ -758,19 +756,20 @@
                     body.load("text");
                     await context.sync();
                     
-                    const fullText = body.text;
-                    downloadFile(fullText, 'debug_01_fullText.txt'); // DEBUG
+                    let fullText = body.text;
+                    // Fix line break to UTF-8
+                    fullText = fullText.replace(/\r\n/g, '\n');
                     console.log('Full document text length:', fullText.length);
                     
-                    // Use a fresh regex for testing to avoid state issues with /g flag
-                    const languageMarkerTestRegex = /=== ([A-Z]+) ===/g;
-                    const hasLanguageMarkers = languageMarkerTestRegex.test(fullText);
+                    // Check if document has language markers
+                    const languageMarkerRegex = /=== ([A-Z]+) ===/g;
+                    const hasLanguageMarkers = languageMarkerRegex.test(fullText);
                     console.log('Document has language markers:', hasLanguageMarkers);
                     
                     if (hasLanguageMarkers) {
                         // Find all language markers and their positions
                         const markers = [];
-                        const markerRegex = /=== ([A-Z]+) ===/g; // This regex is for iterating
+                        const markerRegex = /=== ([A-Z]+) ===/g;
                         let match;
                         
                         while ((match = markerRegex.exec(fullText)) !== null) {
@@ -784,12 +783,7 @@
                         
                         // Extract English content (everything before first marker)
                         if (markers.length > 0) {
-                            const rawEnglishContent = fullText.substring(0, markers[0].position);
-                            downloadFile(rawEnglishContent, 'debug_02_raw_english_content.txt'); // DEBUG
-
-                            const englishContent = rawEnglishContent.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, '');
-                            downloadFile(englishContent, 'debug_03_trimmed_english_content.txt'); // DEBUG
-                            
+                            const englishContent = fullText.substring(0, markers[0].position).replace(/^[ \t]+|[ \t]+$/g, '');
                             if (englishContent) {
                                 const processedContent = processTextForTranslation(englishContent, 'en');
                                 documentSections.push({ langCode: 'en', content: processedContent });
@@ -812,11 +806,7 @@
                             }
                             
                             const endPos = nextMarker ? nextMarker.position : fullText.length;
-                            const rawContent = fullText.substring(startPos, endPos);
-                            downloadFile(rawContent, `debug_02_raw_content_${currentMarker.iso}.txt`); // DEBUG
-
-                            const content = rawContent.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, '');
-                            downloadFile(content, `debug_03_trimmed_content_${currentMarker.iso}.txt`); // DEBUG
+                            const content = fullText.substring(startPos, endPos).replace(/^[ \t]+|[ \t]+$/g, '');
                             
                             console.log(`Processing ${currentMarker.iso}: length=${content.length}`);
                             
@@ -839,7 +829,6 @@
                     } else {
                         // No language markers - treat as single English document
                         console.log('No language markers found, treating as English');
-                        downloadFile(fullText, 'debug_02_no_markers_found.txt'); // DEBUG
                         const processedContent = processTextForTranslation(fullText, 'en');
                         documentSections.push({ langCode: 'en', content: processedContent });
                     }
