@@ -762,15 +762,15 @@
                     downloadFile(fullText, 'debug_01_fullText.txt'); // DEBUG
                     console.log('Full document text length:', fullText.length);
                     
-                    // Check if document has language markers
-                    const languageMarkerRegex = /=== ([A-Z]+) ===/g;
-                    const hasLanguageMarkers = languageMarkerRegex.test(fullText);
+                    // Use a fresh regex for testing to avoid state issues with /g flag
+                    const languageMarkerTestRegex = /=== ([A-Z]+) ===/g;
+                    const hasLanguageMarkers = languageMarkerTestRegex.test(fullText);
                     console.log('Document has language markers:', hasLanguageMarkers);
                     
                     if (hasLanguageMarkers) {
                         // Find all language markers and their positions
                         const markers = [];
-                        const markerRegex = /=== ([A-Z]+) ===/g;
+                        const markerRegex = /=== ([A-Z]+) ===/g; // This regex is for iterating
                         let match;
                         
                         while ((match = markerRegex.exec(fullText)) !== null) {
@@ -787,7 +787,7 @@
                             const rawEnglishContent = fullText.substring(0, markers[0].position);
                             downloadFile(rawEnglishContent, 'debug_02_raw_english_content.txt'); // DEBUG
 
-                            const englishContent = rawEnglishContent.replace(/^[ \t]+|[ \t]+$/g, '');
+                            const englishContent = rawEnglishContent.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, '');
                             downloadFile(englishContent, 'debug_03_trimmed_english_content.txt'); // DEBUG
                             
                             if (englishContent) {
@@ -812,7 +812,11 @@
                             }
                             
                             const endPos = nextMarker ? nextMarker.position : fullText.length;
-                            const content = fullText.substring(startPos, endPos).replace(/^[ \t]+|[ \t]+$/g, '');
+                            const rawContent = fullText.substring(startPos, endPos);
+                            downloadFile(rawContent, `debug_02_raw_content_${currentMarker.iso}.txt`); // DEBUG
+
+                            const content = rawContent.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, '');
+                            downloadFile(content, `debug_03_trimmed_content_${currentMarker.iso}.txt`); // DEBUG
                             
                             console.log(`Processing ${currentMarker.iso}: length=${content.length}`);
                             
@@ -835,6 +839,7 @@
                     } else {
                         // No language markers - treat as single English document
                         console.log('No language markers found, treating as English');
+                        downloadFile(fullText, 'debug_02_no_markers_found.txt'); // DEBUG
                         const processedContent = processTextForTranslation(fullText, 'en');
                         documentSections.push({ langCode: 'en', content: processedContent });
                     }
