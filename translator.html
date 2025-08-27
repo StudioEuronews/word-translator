@@ -499,6 +499,9 @@
             // Updated regex to handle URLs with parameters, anchors, and special characters
             processedText = processedText.replace(/https?:\/\/[^\s\n\r<>]+/g, '');
             
+            // Clean up any extra whitespace left by URL removal
+            processedText = processedText.replace(/\n\n\n+/g, '\n\n');
+            
             // Fix encoding issues - normalize Unicode characters
             processedText = processedText.normalize('NFC');
             
@@ -551,7 +554,8 @@
 
         // Generate complete SSML document with all languages
         function generateCompleteSSML(documentSections) {
-            let ssmlContent = '<?xml version="1.0" encoding="UTF-8"?><speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-GB">';
+            // Simplified SSML structure like the reference file
+            let ssmlContent = '<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-GB">';
             
             for (let i = 0; i < documentSections.length; i++) {
                 const section = documentSections[i];
@@ -559,27 +563,20 @@
                 // Apply SSML-specific word replacements
                 let processedContent = applySSMLReplacements(section.content, section.langCode);
                 
-                // Clean text for XML
+                // Clean text for XML (less aggressive cleaning)
                 const cleanText = processedContent
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&apos;');
+                    .replace(/>/g, '&gt;');
                 
-                // Add line break before each language section
-                ssmlContent += '\n';
-                
-                // Add the content in the target language
+                // Add the content in the target language with proper formatting
                 const config = section.langCode === 'en' ? englishVoice : languages[section.langCode];
+                
                 if (config.prosody) {
                     ssmlContent += `<voice name="${config.voice}"><prosody ${config.prosody}>${cleanText}</prosody></voice>`;
                 } else {
                     ssmlContent += `<voice name="${config.voice}">${cleanText}</voice>`;
                 }
-                
-                // Add line break after each language section
-                ssmlContent += '\n';
             }
             
             ssmlContent += '</speak>';
