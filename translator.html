@@ -499,8 +499,8 @@
             // Replace URLs with a space to avoid word collisions
             processedText = processedText.replace(/https?:\/\/[^\s\n\r<>]+/g, ' ');
             
-            // Clean up any extra whitespace but preserve line breaks
-            processedText = processedText.replace(/[ \t]+/g, ' ').replace(/\n[ \t]+/g, '\n').replace(/[ \t]+\n/g, '\n');
+            // Clean up multiple spaces but preserve line breaks
+            processedText = processedText.replace(/  +/g, ' ');
             
             // Fix encoding issues - normalize Unicode characters
             processedText = processedText.normalize('NFC');
@@ -611,8 +611,8 @@
 
         // Clean text by removing EN line and adapting URLs
         function processTextForTranslation(text, targetLang) {
-            // Remove standalone "EN" line at the beginning
-            let processedText = text.replace(/^EN\s*\n?/m, '').trim();
+            // Remove standalone "EN" line at the beginning (keep other line breaks)
+            let processedText = text.replace(/^EN\s*\n?/m, '');
             
             // Replace any euronews URL (with or without subdomain) with language-specific version
             if (euronewsUrls[targetLang]) {
@@ -781,7 +781,7 @@
                         
                         // Extract English content (everything before first marker)
                         if (markers.length > 0) {
-                            const englishContent = fullText.substring(0, markers[0].position).trim();
+                            const englishContent = fullText.substring(0, markers[0].position).replace(/^\s+|\s+$/g, '');
                             if (englishContent) {
                                 const processedContent = processTextForTranslation(englishContent, 'en');
                                 documentSections.push({ langCode: 'en', content: processedContent });
@@ -804,7 +804,7 @@
                             }
                             
                             const endPos = nextMarker ? nextMarker.position : fullText.length;
-                            const content = fullText.substring(startPos, endPos).trim();
+                            const content = fullText.substring(startPos, endPos).replace(/^\s+|\s+$/g, '');
                             
                             console.log(`Processing ${currentMarker.iso}: length=${content.length}`);
                             
