@@ -562,6 +562,7 @@
                 
                 // Apply SSML-specific word replacements
                 let processedContent = applySSMLReplacements(section.content, section.langCode);
+                downloadFile(processedContent, `debug_04_processed_content_${section.langCode}.txt`); // DEBUG
                 
                 // Clean text for XML (preserve line breaks)
                 const cleanText = processedContent
@@ -580,6 +581,7 @@
             }
             
             ssmlContent += '</speak>';
+            downloadFile(ssmlContent, 'debug_05_final_ssml.txt'); // DEBUG
             return ssmlContent;
         }
 
@@ -757,6 +759,7 @@
                     await context.sync();
                     
                     const fullText = body.text;
+                    downloadFile(fullText, 'debug_01_fullText.txt'); // DEBUG
                     console.log('Full document text length:', fullText.length);
                     
                     // Check if document has language markers
@@ -781,7 +784,12 @@
                         
                         // Extract English content (everything before first marker)
                         if (markers.length > 0) {
-                            const englishContent = fullText.substring(0, markers[0].position).replace(/^[ \t]+|[ \t]+$/g, '');
+                            const rawEnglishContent = fullText.substring(0, markers[0].position);
+                            downloadFile(rawEnglishContent, 'debug_02_raw_english_content.txt'); // DEBUG
+
+                            const englishContent = rawEnglishContent.replace(/^[ \t]+|[ \t]+$/g, '');
+                            downloadFile(englishContent, 'debug_03_trimmed_english_content.txt'); // DEBUG
+                            
                             if (englishContent) {
                                 const processedContent = processTextForTranslation(englishContent, 'en');
                                 documentSections.push({ langCode: 'en', content: processedContent });
