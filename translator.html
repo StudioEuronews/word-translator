@@ -493,8 +493,6 @@
                 // Apply SSML-specific word replacements
         function applySSMLReplacements(text, langCode) {
             let processedText = text;
-            // Download processed text as a file
-            downloadFile(processedText, `debug_04_processed_content_${langCode}.txt`); 
             // Remove complete URLs with http:// or https:// protocol
             // Keep simple domain names like euronews.com
             // Replace URLs with a space to avoid word collisions
@@ -533,8 +531,8 @@
                 .replace(/Ãº/g, 'ú')
                 .replace(/Ã§/g, 'ç')
                 .replace(/Ã±/g, 'ñ')
-                // Remove any remaining problematic control characters
-                .replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+                // Remove problematic control characters, but keep tabs and newlines
+                .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
             
             if (!ssmlWordReplacements[langCode]) {
                 return processedText;
@@ -757,8 +755,7 @@
                     body.load("text");
                     await context.sync();
                     
-                    // Clean invisible control characters at the source
-                    let fullText = body.text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+                    let fullText = body.text;
                     console.log('Full document text length:', fullText.length);
                     
                     // Check if document has language markers
@@ -783,7 +780,7 @@
                         
                         // Extract English content (everything before first marker)
                         if (markers.length > 0) {
-                            const englishContent = fullText.substring(0, markers[0].position).replace(/^[ \t]+|[ \t]+$/g, '');
+                            const englishContent = fullText.substring(0, markers[0].position).trim();
                             if (englishContent) {
                                 const processedContent = processTextForTranslation(englishContent, 'en');
                                 documentSections.push({ langCode: 'en', content: processedContent });
@@ -806,7 +803,7 @@
                             }
                             
                             const endPos = nextMarker ? nextMarker.position : fullText.length;
-                            const content = fullText.substring(startPos, endPos).replace(/^[ \t]+|[ \t]+$/g, '');
+                            const content = fullText.substring(startPos, endPos).trim();
                             
                             console.log(`Processing ${currentMarker.iso}: length=${content.length}`);
                             
