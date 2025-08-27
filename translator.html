@@ -500,7 +500,7 @@
             processedText = processedText.replace(/https?:\/\/[^\s\n\r<>]+/g, ' ');
             
             // Clean up multiple spaces but preserve line breaks
-            processedText = processedText.replace(/  +/g, ' ');
+            processedText = processedText.replace(/[^\S\n\r]+/g, ' ');
             
             // Fix encoding issues - normalize Unicode characters
             processedText = processedText.normalize('NFC');
@@ -555,7 +555,7 @@
         // Generate complete SSML document with all languages
         function generateCompleteSSML(documentSections) {
             // Simplified SSML structure like the reference file
-            let ssmlContent = '<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-GB">';
+            let ssmlContent = '<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-GB">\n';
             
             for (let i = 0; i < documentSections.length; i++) {
                 const section = documentSections[i];
@@ -563,7 +563,7 @@
                 // Apply SSML-specific word replacements
                 let processedContent = applySSMLReplacements(section.content, section.langCode);
                 
-                // Clean text for XML (less aggressive cleaning)
+                // Clean text for XML (preserve line breaks)
                 const cleanText = processedContent
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
