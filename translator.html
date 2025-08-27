@@ -497,7 +497,8 @@
             // Remove complete URLs with http:// or https:// protocol
             // Keep simple domain names like euronews.com
             processedText = processedText.replace(/https?:\/\/[^\s]+/g, '');
-            
+            processedText = processedText.replace(/http?:\/\/[^\s]+/g, '');
+
             // Fix encoding issues - normalize Unicode characters
             processedText = processedText.normalize('NFC');
             
