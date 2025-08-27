@@ -493,7 +493,8 @@
                 // Apply SSML-specific word replacements
         function applySSMLReplacements(text, langCode) {
             let processedText = text;
-            
+            // Download processed text as a file
+            downloadFile(processedText, `debug_04_processed_content_${langCode}.txt`); 
             // Remove complete URLs with http:// or https:// protocol
             // Keep simple domain names like euronews.com
             // Replace URLs with a space to avoid word collisions
@@ -756,7 +757,8 @@
                     body.load("text");
                     await context.sync();
                     
-                    let fullText = body.text;
+                    // Clean invisible control characters at the source
+                    let fullText = body.text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
                     console.log('Full document text length:', fullText.length);
                     
                     // Check if document has language markers
@@ -837,10 +839,8 @@
                     if (documentSections.length === 0) {
                         throw new Error('No content found to export.');
                     }
-                    // DEBUG Export documentSections as Text file
-                    documentSections.forEach(section => {
-                        downloadFile(section.content, `debug_04_processed_content_${section.langCode}.txt`);
-                    });
+                    // Log each section's language and content length
+                    
                     // Generate complete SSML document
                     const completeSSML = generateCompleteSSML(documentSections);
                     
