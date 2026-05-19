@@ -351,7 +351,7 @@
                     <label for="ar">Arabic</label>
                 </div>
                 <div class="language-option">
-                    <input type="checkbox" id="kk" value="kk">
+                    <input type="checkbox" id="kk" value="kk" checked>
                     <label for="kk">Kazakh</label>
                 </div>
             </div>
@@ -450,14 +450,15 @@
             'pl': { name: 'Polish', iso: 'PL', voice: 'pl-PL-MarekNeural', prosody: 'rate="-2.00%"', ssmlLang: 'pl-PL' },
             'fa': { name: 'Farsi', iso: 'FA', voice: 'fa-IR-FaridNeural', prosody: '', ssmlLang: 'fa-IR' },
             'ar': { name: 'Arabic', iso: 'AR', voice: 'ar-SA-HamedNeural', prosody: '', ssmlLang: 'ar-SA' },
-            'kk': { name: 'Kazakh', iso: 'KK', voice: 'en-GB-Ollie:DragonHDLatestNeural" parameters="temperature=0.4', prosody: 'rate="-2.00%" pitch="low"', ssmlLang: 'kk-KZ' }
+            'kk': { name: 'Kazakh', iso: 'KK', voice: 'en-GB-Ollie:DragonHDLatestNeural', parameters: 'temperature=0.4', prosody: 'rate="-2.00%" pitch="low"', ssmlLang: 'kk-KZ' }
         };
 
         // English voice configuration
         const englishVoice = {
             name: 'English',
             iso: 'EN',
-            voice: 'en-GB-Ollie:DragonHDLatestNeural" parameters="temperature=0.4',
+            voice: 'en-GB-Ollie:DragonHDLatestNeural',
+            parameters: 'temperature=0.4',
             prosody: 'rate="-2.00%" pitch="low"',
             ssmlLang: 'en-GB'
         };
@@ -518,7 +519,33 @@
 
         // Generate complete SSML document with all languages
         function generateCompleteSSML(documentSections) {
-            let ssmlContent = '<?xml version="1.0" encoding="UTF-8"?><speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-GB">';
+            // Build list of voices used for Azure metadata
+            const usedVoices = [];
+            const seenVoices = new Set();
+            
+            for (const section of documentSections) {
+                const config = section.langCode === 'en' ? englishVoice : languages[section.langCode];
+                if (config && !seenVoices.has(config.voice)) {
+                    seenVoices.add(config.voice);
+                    usedVoices.push({
+                        ShortName: config.voice,
+                        Locale: config.ssmlLang
+                    });
+                }
+            }
+
+            // Generate Azure metadata comments
+            const voiceMapItems = usedVoices.map(v => 
+                `{"Id":"00000000-0000-0000-0000-000000000000","Name":"${v.ShortName}","ShortName":"${v.ShortName}","Locale":"${v.Locale}","VoiceType":"StandardVoice"}`
+            ).join(',');
+            
+            const locales = [...new Set(usedVoices.map(v => v.Locale))];
+            const localesObj = locales.map(l => `"${l}":{"AutoApplyCustomLexiconFiles":[{}]}`).join(',');
+
+            let ssmlContent = `<!--ID=B7267351-473F-409D-9765-754A8EBCDE05;Version=1|{"VoiceNameToIdMapItems":[${voiceMapItems}]}-->\n`;
+            ssmlContent += `<!--ID=FCB40C2B-1F9F-4C26-B1A1-CF8E67BE07D1;Version=1|{"Files":{}}-->\n`;
+            ssmlContent += `<!--ID=5B95B1CC-2C7B-494F-B746-CF22A0E779B7;Version=1|{"Locales":{${localesObj}}}-->\n`;
+            ssmlContent += '<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-GB">';
             
             for (let i = 0; i < documentSections.length; i++) {
                 const section = documentSections[i];
@@ -537,12 +564,15 @@
                 // Add line break before each language section
                 ssmlContent += '\n';
                 
-                // Add the content in the target language
+                // Build voice opening tag — handle optional "parameters" attribute
                 const config = section.langCode === 'en' ? englishVoice : languages[section.langCode];
+                const parametersAttr = config.parameters ? ` parameters="${config.parameters}"` : '';
+                const voiceOpen = `<voice name="${config.voice}"${parametersAttr}>`;
+
                 if (config.prosody) {
-                    ssmlContent += `<voice name="${config.voice}"><prosody ${config.prosody}>${cleanText}</prosody></voice>`;
+                    ssmlContent += `${voiceOpen}<prosody ${config.prosody}>${cleanText}</prosody></voice>`;
                 } else {
-                    ssmlContent += `<voice name="${config.voice}">${cleanText}</voice>`;
+                    ssmlContent += `${voiceOpen}${cleanText}</voice>`;
                 }
                 
                 // Add line break after each language section
