@@ -851,13 +851,34 @@
                         throw new Error('No content found to export.');
                     }
                     
-                    // Generate complete SSML document
-                    const completeSSML = generateCompleteSSML(documentSections);
+                    // Split sections into two files:
+                    // File 1: EN, FR, DE, IT, ES, PT
+                    // File 2: RU, EL, HU, PL, FA, AR, KK (and any others)
+                    const file1LangCodes = new Set(['en', 'fr', 'de', 'it', 'es', 'pt']);
                     
-                    // Download single text file with document name
-                    downloadFile(completeSSML, `${documentName}.txt`, 'text/plain');
+                    const sections1 = documentSections.filter(s => file1LangCodes.has(s.langCode));
+                    const sections2 = documentSections.filter(s => !file1LangCodes.has(s.langCode));
                     
-                    showStatus(`✅ SSML file "${documentName}.txt" exported! Document with ${documentSections.length} sections downloaded.`, 'success');
+                    let exportCount = 0;
+                    
+                    if (sections1.length > 0) {
+                        const ssml1 = generateCompleteSSML(sections1);
+                        downloadFile(ssml1, `${documentName}-1.txt`, 'text/plain');
+                        exportCount++;
+                    }
+                    
+                    // Small delay between downloads to avoid browser blocking
+                    if (sections1.length > 0 && sections2.length > 0) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                    
+                    if (sections2.length > 0) {
+                        const ssml2 = generateCompleteSSML(sections2);
+                        downloadFile(ssml2, `${documentName}-2.txt`, 'text/plain');
+                        exportCount++;
+                    }
+                    
+                    showStatus(`✅ ${exportCount} SSML file(s) exported: "${documentName}-1.txt" (EN/FR/DE/IT/ES/PT)${sections2.length > 0 ? ` and "${documentName}-2.txt" (RU/EL/HU/PL/FA/AR/KK)` : ''}.`, 'success');
                 });
                 
             } catch (error) {
