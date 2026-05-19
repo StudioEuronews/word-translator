@@ -572,8 +572,9 @@
                 // Apply SSML-specific word replacements
                 let processedContent = applySSMLReplacements(section.content, section.langCode);
                 
-                // Clean text for XML
+                // Clean text for XML — strip control characters (ENQ, BEL, etc.) first
                 const cleanText = processedContent
+                    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // control chars incl. ENQ (0x05)
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;')
