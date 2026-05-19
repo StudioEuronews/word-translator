@@ -351,7 +351,7 @@
                     <label for="ar">Arabic</label>
                 </div>
                 <div class="language-option">
-                    <input type="checkbox" id="kk" value="kk"checked>
+                    <input type="checkbox" id="kk" value="kk">
                     <label for="kk">Kazakh</label>
                 </div>
             </div>
@@ -440,7 +440,7 @@
         // Languages with specific voice configurations
         // multilingual: true → génère <lang xml:lang="ssmlLang"> autour du contenu
         const languages = {
-            'fr': { name: 'French', iso: 'FR', voice: 'fr-FR-RemyMultilingualNeural', multilingual: true, prosody: 'rate="+7.00%"', ssmlLang: 'fr-FR' },
+            'fr': { name: 'French', iso: 'FR', voice: 'fr-FR-Remy:DragonHDLatestNeural', multilingual: true, prosody: 'rate="+7.00%"', ssmlLang: 'fr-FR' },
             'de': { name: 'German', iso: 'DE', voice: 'de-DE-ConradNeural', multilingual: false, prosody: '', ssmlLang: 'de-DE' },
             'it': { name: 'Italian', iso: 'IT', voice: 'it-IT-GiuseppeMultilingualNeural', multilingual: true, prosody: 'rate="+7.00%" pitch="low"', ssmlLang: 'it-IT' },
             'es': { name: 'Spanish', iso: 'ES', voice: 'es-ES-AlvaroNeural', multilingual: false, prosody: 'pitch="low"', ssmlLang: 'es-ES' },
@@ -451,7 +451,7 @@
             'pl': { name: 'Polish', iso: 'PL', voice: 'pl-PL-MarekNeural', multilingual: false, prosody: 'rate="-2.00%"', ssmlLang: 'pl-PL' },
             'fa': { name: 'Farsi', iso: 'FA', voice: 'fa-IR-FaridNeural', multilingual: false, prosody: '', ssmlLang: 'fa-IR' },
             'ar': { name: 'Arabic', iso: 'AR', voice: 'ar-SA-HamedNeural', multilingual: false, prosody: '', ssmlLang: 'ar-SA' },
-            'kk': { name: 'Kazakh', iso: 'KK', voice: 'de-DE-SeraphinaMultilingualNeural', multilingual: true, prosody: '', ssmlLang: 'kk-KZ' }
+            'kk': { name: 'Kazakh', iso: 'KK', voice: 'de-DE-Seraphina:DragonHDLatestNeural', multilingual: false, prosody: '', ssmlLang: 'kk-KZ' }
         };
 
         // English voice configuration
