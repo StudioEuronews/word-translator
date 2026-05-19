@@ -351,7 +351,7 @@
                     <label for="ar">Arabic</label>
                 </div>
                 <div class="language-option">
-                    <input type="checkbox" id="kk" value="kk">
+                    <input type="checkbox" id="kk" value="kk" checked>
                     <label for="kk">Kazakh</label>
                 </div>
             </div>
@@ -536,10 +536,27 @@
                 }
             }
 
+            // Real Azure voice IDs
+            const voiceIds = {
+                'en-GB-Ollie:DragonHDLatestNeural': 'a432bb74-1398-4628-8366-5752ed504176',
+                'fr-FR-Remy:DragonHDLatestNeural': '723b78c8-b15b-457f-b132-09bc65dea613',
+                'de-DE-ConradNeural': '865dd6ad-a19e-475b-86b9-464c889250a6',
+                'it-IT-GiuseppeMultilingualNeural': '4c2ce623-5d8f-444e-9c69-ceeca2e0bd65',
+                'es-ES-AlvaroNeural': 'ffe34fb6-c1ee-45ae-aef3-b0c303614c19',
+                'pt-PT-RaquelNeural': '5a8032b2-536d-4341-b828-550ae5946fd9',
+                'ru-RU-DmitryNeural': '8f00a701-8c0f-487b-af37-fe478a30fe64',
+                'el-GR-NestorasNeural': 'd3fc4288-e3f5-4ce8-b70e-c69ba7bd2405',
+                'hu-HU-TamasNeural': '7c31a42d-a9f5-4780-81f2-f05183453f7c',
+                'pl-PL-MarekNeural': 'adc6ae77-abab-49e2-a6e5-a79ed6646bdd',
+                'fa-IR-FaridNeural': '50c098f5-42ff-4a39-9753-a595d537d428',
+                'de-DE-Seraphina:DragonHDLatestNeural': 'fff89e09-9ed0-4c1f-a9bd-6b7791a8b480'
+            };
+
             // Generate Azure metadata comments
-            const voiceMapItems = usedVoices.map(v => 
-                `{"Id":"00000000-0000-0000-0000-000000000000","Name":"${v.ShortName}","ShortName":"${v.ShortName}","Locale":"${v.Locale}","VoiceType":"StandardVoice"}`
-            ).join(',');
+            const voiceMapItems = usedVoices.map(v => {
+                const id = voiceIds[v.ShortName] || '00000000-0000-0000-0000-000000000000';
+                return `{"Id":"${id}","Name":"${v.ShortName}","ShortName":"${v.ShortName}","Locale":"${v.Locale}","VoiceType":"StandardVoice"}`;
+            }).join(',');
             
             const locales = [...new Set(usedVoices.map(v => v.Locale))];
             const localesObj = locales.map(l => `"${l}":{"AutoApplyCustomLexiconFiles":[{}]}`).join(',');
