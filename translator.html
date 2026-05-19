@@ -351,7 +351,7 @@
                     <label for="ar">Arabic</label>
                 </div>
                 <div class="language-option">
-                    <input type="checkbox" id="kk" value="kk" checked>
+                    <input type="checkbox" id="kk" value="kk">
                     <label for="kk">Kazakh</label>
                 </div>
             </div>
@@ -438,19 +438,20 @@
 
     <script>
         // Languages with specific voice configurations
+        // multilingual: true → génère <lang xml:lang="ssmlLang"> autour du contenu
         const languages = {
-            'fr': { name: 'French', iso: 'FR', voice: 'fr-FR-RemyMultilingualNeural', prosody: 'rate="+7.00%"', ssmlLang: 'fr-FR' },
-            'de': { name: 'German', iso: 'DE', voice: 'de-DE-ConradNeural', prosody: '', ssmlLang: 'de-DE' },
-            'it': { name: 'Italian', iso: 'IT', voice: 'it-IT-GiuseppeMultilingualNeural', prosody: 'rate="+7.00%" pitch="low"', ssmlLang: 'it-IT' },
-            'es': { name: 'Spanish', iso: 'ES', voice: 'es-ES-AlvaroNeural', prosody: 'pitch="low"', ssmlLang: 'es-ES' },
-            'pt': { name: 'Portuguese', iso: 'PT', voice: 'pt-PT-RaquelNeural', prosody: 'rate="+5.00%"', ssmlLang: 'pt-PT' },
-            'ru': { name: 'Russian', iso: 'RU', voice: 'ru-RU-DmitryNeural', prosody: '', ssmlLang: 'ru-RU' },
-            'el': { name: 'Greek', iso: 'EL', voice: 'el-GR-NestorasNeural', prosody: '', ssmlLang: 'el-GR' },
-            'hu': { name: 'Hungarian', iso: 'HU', voice: 'hu-HU-TamasNeural', prosody: '', ssmlLang: 'hu-HU' },
-            'pl': { name: 'Polish', iso: 'PL', voice: 'pl-PL-MarekNeural', prosody: 'rate="-2.00%"', ssmlLang: 'pl-PL' },
-            'fa': { name: 'Farsi', iso: 'FA', voice: 'fa-IR-FaridNeural', prosody: '', ssmlLang: 'fa-IR' },
-            'ar': { name: 'Arabic', iso: 'AR', voice: 'ar-SA-HamedNeural', prosody: '', ssmlLang: 'ar-SA' },
-            'kk': { name: 'Kazakh', iso: 'KK', voice: 'en-GB-Ollie:DragonHDLatestNeural', parameters: 'temperature=0.4', prosody: 'rate="-2.00%" pitch="low"', ssmlLang: 'kk-KZ' }
+            'fr': { name: 'French', iso: 'FR', voice: 'fr-FR-RemyMultilingualNeural', multilingual: true, prosody: 'rate="+7.00%"', ssmlLang: 'fr-FR' },
+            'de': { name: 'German', iso: 'DE', voice: 'de-DE-ConradNeural', multilingual: false, prosody: '', ssmlLang: 'de-DE' },
+            'it': { name: 'Italian', iso: 'IT', voice: 'it-IT-GiuseppeMultilingualNeural', multilingual: true, prosody: 'rate="+7.00%" pitch="low"', ssmlLang: 'it-IT' },
+            'es': { name: 'Spanish', iso: 'ES', voice: 'es-ES-AlvaroNeural', multilingual: false, prosody: 'pitch="low"', ssmlLang: 'es-ES' },
+            'pt': { name: 'Portuguese', iso: 'PT', voice: 'pt-PT-RaquelNeural', multilingual: false, prosody: 'rate="+5.00%"', ssmlLang: 'pt-PT' },
+            'ru': { name: 'Russian', iso: 'RU', voice: 'ru-RU-DmitryNeural', multilingual: false, prosody: '', ssmlLang: 'ru-RU' },
+            'el': { name: 'Greek', iso: 'EL', voice: 'el-GR-NestorasNeural', multilingual: false, prosody: '', ssmlLang: 'el-GR' },
+            'hu': { name: 'Hungarian', iso: 'HU', voice: 'hu-HU-TamasNeural', multilingual: false, prosody: '', ssmlLang: 'hu-HU' },
+            'pl': { name: 'Polish', iso: 'PL', voice: 'pl-PL-MarekNeural', multilingual: false, prosody: 'rate="-2.00%"', ssmlLang: 'pl-PL' },
+            'fa': { name: 'Farsi', iso: 'FA', voice: 'fa-IR-FaridNeural', multilingual: false, prosody: '', ssmlLang: 'fa-IR' },
+            'ar': { name: 'Arabic', iso: 'AR', voice: 'ar-SA-HamedNeural', multilingual: false, prosody: '', ssmlLang: 'ar-SA' },
+            'kk': { name: 'Kazakh', iso: 'KK', voice: 'de-DE-SeraphinaMultilingualNeural', multilingual: true, prosody: '', ssmlLang: 'kk-KZ' }
         };
 
         // English voice configuration
@@ -459,6 +460,7 @@
             iso: 'EN',
             voice: 'en-GB-Ollie:DragonHDLatestNeural',
             parameters: 'temperature=0.4',
+            multilingual: true,
             prosody: 'rate="-2.00%" pitch="low"',
             ssmlLang: 'en-GB'
         };
@@ -569,11 +571,22 @@
                 const parametersAttr = config.parameters ? ` parameters="${config.parameters}"` : '';
                 const voiceOpen = `<voice name="${config.voice}"${parametersAttr}>`;
 
-                if (config.prosody) {
-                    ssmlContent += `${voiceOpen}<prosody ${config.prosody}>${cleanText}</prosody></voice>`;
+                // Wrap content with <lang> for multilingual voices
+                let innerContent;
+                if (config.multilingual) {
+                    if (config.prosody) {
+                        innerContent = `<lang xml:lang="${config.ssmlLang}"><prosody ${config.prosody}>${cleanText}</prosody></lang>`;
+                    } else {
+                        innerContent = `<lang xml:lang="${config.ssmlLang}">${cleanText}</lang>`;
+                    }
                 } else {
-                    ssmlContent += `${voiceOpen}${cleanText}</voice>`;
+                    if (config.prosody) {
+                        innerContent = `<prosody ${config.prosody}>${cleanText}</prosody>`;
+                    } else {
+                        innerContent = cleanText;
+                    }
                 }
+                ssmlContent += `${voiceOpen}${innerContent}</voice>`;
                 
                 // Add line break after each language section
                 ssmlContent += '\n';
